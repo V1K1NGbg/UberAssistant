@@ -14,6 +14,7 @@ import 'providers/app_state.dart';
 import 'services/local_data_service.dart';
 import 'services/notification_service.dart';
 import 'services/websocket_service.dart';
+import 'widgets/time_starter.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -70,7 +71,11 @@ class UberAssistantApp extends StatelessWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
       routes: {
-        '/': (_) => app.seenOnboarding ? const HomePage() : const OnboardingPage(),
+        '/': (_) => TimerManager(
+          child: app.seenOnboarding
+              ? const HomePage()
+              : const OnboardingPage(),
+        ),
         '/home': (_) => const HomePage(),
         '/settings': (_) => const SettingsPage(),
         '/privacy': (_) => const PrivacyPage(),
