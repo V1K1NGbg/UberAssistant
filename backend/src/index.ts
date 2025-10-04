@@ -104,7 +104,7 @@ function getDriversSortedByDistance(request: CustomerRequest): Array<{ driverId:
             request.from_location.lon,
             driver.location.lat,
             driver.location.lon
-        )
+        ) * (storageManager.getDriver(driver.driver_id)?.driver_gender === 'female' ? 0.8 : 1.0) // 20% distance reduction
     }));
 
     return driversWithDistance.sort((a, b) => a.distance - b.distance);

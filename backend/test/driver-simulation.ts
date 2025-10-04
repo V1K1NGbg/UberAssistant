@@ -92,7 +92,7 @@ function createDriverSimulations(count: number): DriverSimulation[] {
     const drivers: DriverSimulation[] = [];
     
     for (let i = 1; i <= count; i++) {
-        const driverId = `D_${200000 + i}`;
+        const driverId = `D_${200010 + i}`;
         const location = getRandomLocation(locations);
         const restTime = Math.floor(Math.random() * 300) + 60; // Random rest time between 60-360 seconds
         
