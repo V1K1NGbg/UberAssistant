@@ -1,0 +1,51 @@
+name: uber_assistant
+description: Uber hackathon - Uber Assistant (Flutter frontend)
+publish_to: "none"
+version: 0.1.0+1
+
+environment:
+  sdk: ">=3.4.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.6
+  provider: ^6.1.2
+  shared_preferences: ^2.2.3
+  intl: ^0.20.2
+
+  # network + sockets
+  web_socket_channel: ^2.4.5
+
+  # location + permissions
+  geolocator: ^11.1.0
+  permission_handler: ^11.3.1
+
+  # notifications
+  flutter_local_notifications: ^17.2.2
+
+  # foreground service (Android)
+  flutter_foreground_task: ^6.4.1
+
+  # ui niceties
+  slide_to_act: ^2.0.2
+  flutter_svg: ^2.0.10+1
+
+  # localization
+  flutter_localizations:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+  generate: true
+  assets:
+    - assets/data/customers.json
+    - assets/data/drivers.json
+    - assets/images/onboarding_1.png
+    - assets/images/onboarding_2.png
+    - assets/images/onboarding_3.png

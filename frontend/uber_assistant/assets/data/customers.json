@@ -1,0 +1,22 @@
+[
+  { "customer_id": "C_100001", "customer_name": "Michael Scott", "customer_rating": 3.9 },
+  { "customer_id": "C_100002", "customer_name": "Leslie Knope", "customer_rating": 4.8 },
+  { "customer_id": "C_100003", "customer_name": "Jon Snow", "customer_rating": 4.5 },
+  { "customer_id": "C_100004", "customer_name": "Tony Stark", "customer_rating": 4.9 },
+  { "customer_id": "C_100005", "customer_name": "Dwight Schrute", "customer_rating": 3.5 },
+  { "customer_id": "C_100006", "customer_name": "Ellen Ripley", "customer_rating": 4.7 },
+  { "customer_id": "C_100007", "customer_name": "Walter White", "customer_rating": 2.9 },
+  { "customer_id": "C_100008", "customer_name": "Marty McFly", "customer_rating": 4.6 },
+  { "customer_id": "C_100009", "customer_name": "Hermione Granger", "customer_rating": 4.9 },
+  { "customer_id": "C_100010", "customer_name": "Jack Sparrow", "customer_rating": 3.7 },
+  { "customer_id": "C_100011", "customer_name": "Lara Croft", "customer_rating": 4.8 },
+  { "customer_id": "C_100012", "customer_name": "Rick Sanchez", "customer_rating": 2.4 },
+  { "customer_id": "C_100013", "customer_name": "Eleven Hopper", "customer_rating": 4.5 },
+  { "customer_id": "C_100014", "customer_name": "Peter Parker", "customer_rating": 4.3 },
+  { "customer_id": "C_100015", "customer_name": "Frodo Baggins", "customer_rating": 4.7 },
+  { "customer_id": "C_100016", "customer_name": "Buffy Summers", "customer_rating": 4.4 },
+  { "customer_id": "C_100017", "customer_name": "BoJack Horseman", "customer_rating": 2.8 },
+  { "customer_id": "C_100018", "customer_name": "Sheldon Cooper", "customer_rating": 3.6 },
+  { "customer_id": "C_100019", "customer_name": "Daenerys Targaryen", "customer_rating": 4.2 },
+  { "customer_id": "C_100020", "customer_name": "Ash Ketchum", "customer_rating": 4.1 }
+]
