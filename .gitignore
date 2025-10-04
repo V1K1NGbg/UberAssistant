@@ -117,3 +117,49 @@ app.*.symbols
 !**/ios/**/default.perspectivev3
 !/packages/flutter_tools/test/data/dart_dependencies_test/**/.packages
 !/dev/ci/**/Gemfile.lock
+
+# Miscellaneous
+/frontend/uber_assistant/*.class
+/frontend/uber_assistant/*.log
+/frontend/uber_assistant/*.pyc
+/frontend/uber_assistant/*.swp
+/frontend/uber_assistant/.DS_Store
+/frontend/uber_assistant/.atom/
+/frontend/uber_assistant/.build/
+/frontend/uber_assistant/.buildlog/
+/frontend/uber_assistant/.history
+/frontend/uber_assistant/.svn/
+/frontend/uber_assistant/.swiftpm/
+/frontend/uber_assistant/migrate_working_dir/
+
+# IntelliJ related
+/frontend/uber_assistant/*.iml
+/frontend/uber_assistant/*.ipr
+/frontend/uber_assistant/*.iws
+/frontend/uber_assistant/.idea/
+
+# The .vscode folder contains launch configuration and tasks you configure in
+# VS Code which you may wish to be included in version control, so this line
+# is commented out by default.
+#.vscode/
+
+# Flutter/Dart/Pub related
+/frontend/uber_assistant/**/doc/api/
+/frontend/uber_assistant/**/ios/Flutter/.last_build_id
+/frontend/uber_assistant/.dart_tool/
+/frontend/uber_assistant/.flutter-plugins-dependencies
+/frontend/uber_assistant/.pub-cache/
+/frontend/uber_assistant/.pub/
+/frontend/uber_assistant/build/
+/frontend/uber_assistant/coverage/
+
+# Symbolication related
+/frontend/uber_assistant/app.*.symbols
+
+# Obfuscation related
+/frontend/uber_assistant/app.*.map.json
+
+# Android Studio will place build artifacts here
+/frontend/uber_assistant/android/app/debug
+/frontend/uber_assistant/android/app/profile
+/frontend/uber_assistant/android/app/release
