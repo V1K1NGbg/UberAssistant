@@ -66,9 +66,11 @@ function getDriversSortedByDistance(request: CustomerRequest): Array<{ driverId:
 // Placeholder function for getting advice on whether to accept the request
 // TODO: Implement the actual advice logic
 function getAdviceForRequest(request: CustomerRequest, driver: DriverStatus): string {
-    // This function will take in a request and a driver and return a string "yes"/"no" for advice
-    // Placeholder implementation - always returns "yes" for now
-    return "yes";
+    if (request.price/request.duration_mins > 0.5) {
+        return 'yes';
+    } else {
+        return 'no';
+    }
 }
 
 // Function to send request to driver via WebSocket
@@ -135,11 +137,11 @@ function tryNextDriver(customerId: string): void {
         triedDrivers.push(nextDriver.driverId);
         pending.currentDriverId = nextDriver.driverId;
         
-        // Set a 20-second timeout for driver response
+        // Set a 25-second timeout for driver response
         pending.timeoutId = setTimeout(() => {
-            console.log(`Driver ${nextDriver.driverId} did not respond within 20 seconds. Moving to next driver...`);
+            console.log(`Driver ${nextDriver.driverId} did not respond within 25 seconds. Moving to next driver...`);
             tryNextDriver(customerId);
-        }, 20000); // 20 seconds
+        }, 25000); // 25 seconds
         
         console.log(`Sent request from customer ${customerId} to driver ${nextDriver.driverId} (distance: ${nextDriver.distance.toFixed(2)}km, advice: ${request.advice})`);
     } else {
@@ -181,14 +183,6 @@ app.post('/api/customer_request', (req: Request, res: Response) => {
 
     // Get all drivers sorted by distance
     const sortedDrivers = getDriversSortedByDistance(customerRequest);
-
-    if (sortedDrivers.length === 0) {
-        res.status(404).json({
-            success: false,
-            message: 'No active drivers available'
-        });
-        return;
-    }
 
     // Store the pending request
     pendingRequests.set(customerRequest.customer_id, {
