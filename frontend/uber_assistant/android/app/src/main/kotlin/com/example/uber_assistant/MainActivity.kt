@@ -1,4 +1,4 @@
-package com.example.uber_assistant
+package com.increedible.uber_assistant
 
 import io.flutter.embedding.android.FlutterActivity
 
