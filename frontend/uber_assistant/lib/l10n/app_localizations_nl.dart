@@ -9,63 +9,24 @@ class AppLocalizationsNl extends AppLocalizations {
   AppLocalizationsNl([String locale = 'nl']) : super(locale);
 
   @override
-  String get appName => 'Slim Verdienen';
+  String get homeTitle => 'Uber Assistant';
 
   @override
-  String get onboardingTitle1 => 'Rijd slimmer';
+  String get settings => 'Instellingen';
 
   @override
-  String get onboardingBody1 =>
-      'Deze app helpt bepalen wanneer je een rit aanneemt, wanneer je rust pakt en hoe je je inkomsten maximaliseert.';
+  String get about => 'Over';
 
   @override
-  String get onboardingTitle2 => 'Realtime aanbiedingen';
+  String get privacy => 'Privacybeleid';
 
   @override
-  String get onboardingBody2 =>
-      'Krijg tijdige aanbiedingen met heldere info: ophaalpunt, bestemming, duur, verdiensten en advies van het model.';
+  String get privacyBody =>
+      'We verwerken alleen de minimale gegevens die nodig zijn voor de demo.';
 
   @override
-  String get onboardingTitle3 => 'Jij houdt controle';
-
-  @override
-  String get onboardingBody3 =>
-      'Zet \"Beschikbaar\" aan wanneer je klaar bent. We houden je verbonden en geven direct meldingen.';
-
-  @override
-  String get permTitle => 'Benodigde rechten';
-
-  @override
-  String get permBody =>
-      'We gebruiken je locatie om je te koppelen aan ritten in de buurt en je status te delen met de server.';
-
-  @override
-  String get permAllow => 'Locatie toestaan';
-
-  @override
-  String get permDeniedTitle => 'Toestemming vereist';
-
-  @override
-  String get permDeniedBody =>
-      'Zonder locatie werkt de app niet. Je kunt toestemming geven via Instellingen.';
-
-  @override
-  String get openSettings => 'Open instellingen';
-
-  @override
-  String get exitApp => 'Afsluiten';
-
-  @override
-  String get allSetTitle => 'Alles klaar';
-
-  @override
-  String get allSetBody => 'Zet Beschikbaar aan om aanbiedingen te ontvangen.';
-
-  @override
-  String get letsGo => 'Starten';
-
-  @override
-  String get homeTitle => 'Slim Verdienen';
+  String get aboutBody =>
+      'Hackathon-demo om rijders te helpen slimmer te kiezen.';
 
   @override
   String get available => 'Beschikbaar';
@@ -74,40 +35,50 @@ class AppLocalizationsNl extends AppLocalizations {
   String get unavailable => 'Pauze';
 
   @override
-  String get toggleAvailable => 'Online gaan';
-
-  @override
-  String get toggleUnavailable => 'Offline gaan';
-
-  @override
-  String get statusWaiting => 'Wachten op een klantaanvraag…';
+  String get statusWaiting => 'Wachten op klantaanvragen…';
 
   @override
   String get statusBreak =>
-      'Zet de schakelaar op Beschikbaar om aanbiedingen te ontvangen.';
+      'Zet de schakelaar aan wanneer je klaar bent om aanvragen te ontvangen.';
 
   @override
-  String get statusNothing => 'Momenteel geen activiteit';
+  String get statusNothing => 'Momenteel geen activiteiten';
 
   @override
-  String get earningsLabel => 'Verdiensten';
+  String get queued => 'Volgende rit in wachtrij';
 
   @override
-  String get durationLabel => 'Duur';
+  String get cancel => 'Annuleren';
 
   @override
-  String mins(Object mins) {
-    return '$mins min';
-  }
+  String get ok => 'OK';
 
   @override
-  String get adviceYes => 'Aanbevolen';
+  String get dismiss => 'Sluiten';
 
   @override
-  String get adviceNo => 'Niet aanbevolen';
+  String get driver => 'Bestuurder';
 
   @override
-  String get rating => 'Beoordeling';
+  String get language => 'Taal';
+
+  @override
+  String get themeMode => 'Thema';
+
+  @override
+  String get serverIp => 'Server-IP';
+
+  @override
+  String get tripInTransit => 'Onderweg';
+
+  @override
+  String get imThere => 'Ik ben er';
+
+  @override
+  String get requestTitle => 'Nieuwe aanvraag';
+
+  @override
+  String get requestTitleRecommended => 'Aanbevolen aanvraag';
 
   @override
   String get customer => 'Klant';
@@ -119,75 +90,255 @@ class AppLocalizationsNl extends AppLocalizations {
   String get dropoff => 'Bestemming';
 
   @override
-  String get coords => 'Coördinaten';
+  String get durationLabel => 'Duur';
 
   @override
-  String get accept => 'Accepteren';
+  String get earningsLabel => 'Verdiensten';
 
   @override
-  String get skip => 'Overslaan';
+  String get skip => 'Negeren';
 
   @override
-  String expiresIn(Object secs) {
-    return 'Verloopt over ${secs}s';
+  String get accept => 'Schuif om te accepteren';
+
+  @override
+  String mins(Object minutes) {
+    return '$minutes min';
   }
 
   @override
-  String get requestTitle => 'Nieuwe aanvraag';
+  String expiresIn(Object seconds) {
+    return 'Verloopt over ${seconds}s';
+  }
 
   @override
-  String get requestTitleRecommended => 'Aanbevolen aanvraag';
+  String get onboardingTitle1 => 'Welkom';
 
   @override
-  String get idMissing => 'Klant niet gevonden';
+  String get onboardingBody1 =>
+      'Deze app helpt je slimmer te verdienen met tijdige aanbiedingen.';
 
   @override
-  String get imThere => 'Ik ben er';
+  String get onboardingTitle2 => 'Altijd paraat';
 
   @override
-  String get cancel => 'Annuleren';
+  String get onboardingBody2 =>
+      'We sturen meldingen wanneer er een goede rit in de buurt is.';
 
   @override
-  String get queued => 'Gekoppeld';
+  String get onboardingTitle3 => 'Balans & veiligheid';
 
   @override
-  String get tripInTransit => 'Onderweg';
+  String get onboardingBody3 =>
+      'We geven pauze-tips en gaan veilig met je gegevens om.';
 
   @override
-  String get arrived => 'Bestemming bereikt';
+  String get permTitle => 'Machtigingen';
 
   @override
-  String get settings => 'Instellingen';
+  String get permBody =>
+      'We hebben je locatie nodig om ritten in de buurt te vinden.';
 
   @override
-  String get language => 'Taal';
+  String get permAllow => 'Sta locatie toe';
 
   @override
-  String get languageSystem => 'Systeem';
+  String get permAllowSubtitle =>
+      'Geef toestemming ‘Tijdens gebruik’. Je kunt later in Instellingen ‘Altijd toestaan’ kiezen voor achtergrondgebruik.';
 
   @override
-  String get languageEnglish => 'Engels';
+  String get permGranted => 'Locatie toegestaan';
 
   @override
-  String get languageDutch => 'Nederlands';
+  String get checkAgain => 'Opnieuw controleren';
 
   @override
-  String get driver => 'Bestuurder';
+  String get permDeniedTitle => 'Toestemming vereist';
 
   @override
-  String get serverIp => 'Server IP';
+  String get permDeniedBody =>
+      'De app werkt niet zonder locatie. Je kunt afsluiten of in Instellingen toestemming geven.';
 
   @override
-  String get about => 'Over';
+  String get exitApp => 'Afsluiten';
 
   @override
-  String get privacy => 'Privacybeleid';
+  String get openSettings => 'Open Instellingen';
 
   @override
-  String get aboutBody =>
-      'Slim Verdienen is een hackathon-demo die chauffeurs helpt slimmere en veiligere keuzes te maken.';
+  String get allSetTitle => 'Je bent klaar!';
 
   @override
-  String get privacyBody =>
-      'Deze demo gebruikt je locatie lokaal en stuurt die via de LAN-WebSocket naar je server.';
+  String get allSetBody =>
+      'Kies een bestuurder en begin aanvragen te ontvangen.';
+
+  @override
+  String get letsGo => 'Starten';
+
+  @override
+  String get next => 'Volgende';
+
+  @override
+  String get back => 'Terug';
+
+  @override
+  String get selectDriver => 'Kies je bestuurder';
+
+  @override
+  String get selectDriverBody =>
+      'Kies je demo-identiteit. Later te wijzigen bij Instellingen.';
+
+  @override
+  String get permAlwaysBanner =>
+      'Voor werking op de achtergrond: geef \"Altijd toestaan\" voor locatie.';
+
+  @override
+  String get learnHow => 'Zo los je dit op';
+
+  @override
+  String get locationHelpTitle => '\"Altijd toestaan\" inschakelen';
+
+  @override
+  String get locationHelpBody =>
+      'Schakel achtergrondlocatie in om ook op de achtergrond aanvragen te ontvangen.';
+
+  @override
+  String get locationHelpAndroid =>
+      'Android: App-instellingen > Machtigingen > Locatie > \"Altijd toestaan\".';
+
+  @override
+  String get locationHelpiOS =>
+      'iOS: Instellingen > Privacy en beveiliging > Locatievoorzieningen > Uber Assistant > Toegang: Altijd.';
+
+  @override
+  String get errNoInternet =>
+      'Geen internetverbinding. Controleer je wifi of mobiele data.';
+
+  @override
+  String get errNoLocationPermission =>
+      'De app werkt momenteel niet omdat er geen locatietoestemming is.';
+
+  @override
+  String get wipeData => 'Appgegevens wissen';
+
+  @override
+  String get wipeConfirmTitle => 'Alle appgegevens verwijderen?';
+
+  @override
+  String get wipeConfirmBody =>
+      'Dit verwijdert je taal/thema, bestuurder, server-IP en alle andere voorkeuren. De app start opnieuw in de setup.';
+
+  @override
+  String get delete => 'Verwijderen';
+
+  @override
+  String get wipeDone => 'Appgegevens gewist.';
+
+  @override
+  String get settingsTitle => 'Instellingen';
+
+  @override
+  String get settingsGeneral => 'Algemeen';
+
+  @override
+  String get langSystem => 'Systeem';
+
+  @override
+  String get theme => 'Thema';
+
+  @override
+  String get themeSystem => 'Systeem';
+
+  @override
+  String get themeLight => 'Licht';
+
+  @override
+  String get themeDark => 'Donker';
+
+  @override
+  String get edit => 'Bewerken';
+
+  @override
+  String get save => 'Opslaan';
+
+  @override
+  String get none => 'Geen';
+
+  @override
+  String get dailyReport => 'Dagrapport';
+
+  @override
+  String get dailyGains => 'Opbrengst';
+
+  @override
+  String get completedTrips => 'Voltooide ritten';
+
+  @override
+  String get driveTimeLabel => 'Rijtijd';
+
+  @override
+  String get breakTimeLabel => 'Pauzetijd';
+
+  @override
+  String get breakCountLabel => 'Pauzes';
+
+  @override
+  String get tripHistory => 'Ritgeschiedenis';
+
+  @override
+  String get filter => 'Filter';
+
+  @override
+  String get filterToday => 'Vandaag';
+
+  @override
+  String get filterWeek => 'Deze week';
+
+  @override
+  String get filterMonth => 'Deze maand';
+
+  @override
+  String get filterYear => 'Dit jaar';
+
+  @override
+  String get sort => 'Sorteren';
+
+  @override
+  String get sortEarningsHighLow => 'Verdiensten hoog → laag';
+
+  @override
+  String get sortEarningsLowHigh => 'Verdiensten laag → hoog';
+
+  @override
+  String get sortCompleted => 'Eerst voltooid';
+
+  @override
+  String get sortCancelled => 'Eerst geannuleerd';
+
+  @override
+  String get status => 'Status';
+
+  @override
+  String get statusCompleted => 'Voltooid';
+
+  @override
+  String get statusCancelled => 'Geannuleerd';
+
+  @override
+  String get depart => 'Vertrek';
+
+  @override
+  String get arrive => 'Aankomst';
+
+  @override
+  String get details => 'Details';
+
+  @override
+  String get takeABreak => 'Neem pauze';
+
+  @override
+  String get motivationTitle => 'Goed bezig!';
+
+  @override
+  String get openDialerError => 'Kon de telefoonapp niet openen.';
 }

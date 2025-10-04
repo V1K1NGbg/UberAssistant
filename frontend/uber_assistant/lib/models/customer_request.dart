@@ -6,7 +6,7 @@ class CustomerRequest {
   final GeoPoint to;
   final double durationMins;
   final double price;
-  final String? advice; // "yes" | "no" | null
+  final String? advice;
 
   CustomerRequest({
     required this.customerId,
@@ -18,11 +18,20 @@ class CustomerRequest {
   });
 
   factory CustomerRequest.fromJson(Map<String, dynamic> j) => CustomerRequest(
-    customerId: j['customer_id'],
-    from: GeoPoint.fromJson(j['from_location']),
-    to: GeoPoint.fromJson(j['to_location']),
+    customerId: j['customer_id'] as String,
+    from: GeoPoint.fromJson(j['from_location'] as Map<String, dynamic>),
+    to: GeoPoint.fromJson(j['to_location'] as Map<String, dynamic>),
     durationMins: (j['duration_mins'] as num).toDouble(),
     price: (j['price'] as num).toDouble(),
-    advice: j['advice'],
+    advice: j['advice'] as String?,
   );
+
+  Map<String, dynamic> toJson() => {
+    'customer_id': customerId,
+    'from_location': from.toJson(),
+    'to_location': to.toJson(),
+    'duration_mins': durationMins,
+    'price': price,
+    if (advice != null) 'advice': advice,
+  };
 }

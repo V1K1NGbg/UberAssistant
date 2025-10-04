@@ -1,16 +1,11 @@
-import 'dart:convert';
-
-import 'customer_request.dart';
-import 'geo_point.dart';
-
 class WsMsg {
-  final String type; // register | update | deregister | response | ride_request
+  final String type;
   final String driverId;
-  final GeoPoint? location;
+  final Map<String, dynamic>? location; // {lat, lon}
   final double? restTime;
-  final CustomerRequest? request;
+  final Map<String, dynamic>? request; // only for inbound from server
   final String? customerId;
-  final String? response; // accept | deny
+  final String? response; // 'accept' | 'deny'
 
   WsMsg({
     required this.type,
@@ -22,41 +17,62 @@ class WsMsg {
     this.response,
   });
 
+  factory WsMsg.register({required String driverId, double? lat, double? lon, double? restTime}) =>
+      WsMsg(
+        type: 'register',
+        driverId: driverId,
+        location: (lat != null && lon != null) ? {'lat': lat, 'lon': lon} : null,
+        restTime: restTime,
+      );
+
+  factory WsMsg.update({required String driverId, double? lat, double? lon, double? restTime}) =>
+      WsMsg(
+        type: 'update',
+        driverId: driverId,
+        location: (lat != null && lon != null) ? {'lat': lat, 'lon': lon} : null,
+        restTime: restTime,
+      );
+
+  factory WsMsg.deregister({required String driverId}) =>
+      WsMsg(type: 'deregister', driverId: driverId);
+
+  factory WsMsg.response({
+    required String driverId,
+    required String customerId,
+    required bool accept,
+    double? lat,
+    double? lon,
+    double? restTime,
+  }) =>
+      WsMsg(
+        type: 'response',
+        driverId: driverId,
+        customerId: customerId,
+        response: accept ? 'accept' : 'deny',
+        location: (lat != null && lon != null) ? {'lat': lat, 'lon': lon} : null,
+        restTime: restTime,
+      );
+
+  factory WsMsg.fromJson(Map<String, dynamic> j) => WsMsg(
+    type: j['type'] as String,
+    driverId: j['driverId'] as String? ?? '',
+    location: j['location'] as Map<String, dynamic>?,
+    restTime: (j['restTime'] as num?)?.toDouble(),
+    request: j['request'] as Map<String, dynamic>?,
+    customerId: j['customerId'] as String?,
+    response: j['response'] as String?,
+  );
+
   Map<String, dynamic> toJson() => {
     'type': type,
     'driverId': driverId,
-    if (location != null) 'location': {'lat': location!.lat, 'lon': location!.lon},
+    if (location != null) 'location': location,
     if (restTime != null) 'restTime': restTime,
-    if (request != null)
-      'request': {
-        'customer_id': request!.customerId,
-        'from_location': {
-          'lat': request!.from.lat,
-          'lon': request!.from.lon,
-          'address': request!.from.address,
-        },
-        'to_location': {
-          'lat': request!.to.lat,
-          'lon': request!.to.lon,
-          'address': request!.to.address,
-        },
-        'duration_mins': request!.durationMins,
-        'price': request!.price,
-        if (request!.advice != null) 'advice': request!.advice,
-      },
+    if (request != null) 'request': request,
     if (customerId != null) 'customerId': customerId,
     if (response != null) 'response': response,
   };
 
-  factory WsMsg.fromJson(Map<String, dynamic> j) => WsMsg(
-    type: j['type'],
-    driverId: j['driverId'],
-    location: j['location'] != null ? GeoPoint.fromJson(j['location']) : null,
-    restTime: j['restTime'] != null ? (j['restTime'] as num).toDouble() : null,
-    request: j['request'] != null ? CustomerRequest.fromJson(j['request']) : null,
-    customerId: j['customerId'],
-    response: j['response'],
-  );
   @override
-  String toString() => jsonEncode(toJson());
+  String toString() => toJson().toString();
 }
