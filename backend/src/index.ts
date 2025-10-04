@@ -2,7 +2,7 @@ import express, { Request, Response } from 'express';
 import http, { get } from 'http';
 import WebSocket from 'ws';
 import StorageManager, { Customer, CustomerRequest, Driver, DriverStatus } from './storage';
-import { getAdvice } from './utilities';
+import { getAdvice, timeDelay } from './utilities';
 
 const app = express();
 const PORT = 3000;
@@ -24,6 +24,39 @@ const storageManager = new StorageManager();
 
 // Store monitor connections
 const monitors = new Set<WebSocket>();
+
+// Track earnings per driver
+const driverEarnings = new Map<string, number>();
+
+// Function to update and display driver earnings
+function updateDriverEarnings(driverId: string, amount: number): void {
+    const currentEarnings = driverEarnings.get(driverId) || 0;
+    const newEarnings = currentEarnings + amount;
+    driverEarnings.set(driverId, newEarnings);
+    
+    console.log(`\n=== EARNINGS UPDATE ===`);
+    console.log(`Driver ${driverId} earned $${amount.toFixed(2)}`);
+    console.log(`Driver ${driverId} total earnings: $${newEarnings.toFixed(2)}`);
+    
+    // Display all driver earnings
+    console.log(`\n--- All Driver Earnings ---`);
+    let totalEarnings = 0;
+    let driverCount = 0;
+    
+    driverEarnings.forEach((earnings, id) => {
+        console.log(`Driver ${id}: $${earnings.toFixed(2)}`);
+        totalEarnings += earnings;
+        driverCount++;
+    });
+    
+    if (driverCount > 0) {
+        const avgEarnings = totalEarnings / driverCount;
+        console.log(`\nTotal Drivers: ${driverCount}`);
+        console.log(`Total Earnings: $${totalEarnings.toFixed(2)}`);
+        console.log(`Average Earnings per Driver: $${avgEarnings.toFixed(2)}`);
+    }
+    console.log(`========================\n`);
+}
 
 // Broadcast event to all monitors
 function broadcastToMonitors(event: any): void {
@@ -129,6 +162,14 @@ function tryNextDriver(customerId: string): void {
     if (!nextDriver) {
         console.log(`No more available drivers for customer ${customerId}`);
         pendingRequests.delete(customerId);
+        // pendingRequests.set(customerId, {
+        //     request: pending.request,
+        //     triedDrivers: [],
+        //     sortedDrivers: sortedDrivers
+        // });
+        // setTimeout(() => {
+        //     tryNextDriver(customerId);
+        // }, 60000); // 1 minute delay
         return;
     }
 
@@ -155,7 +196,7 @@ function tryNextDriver(customerId: string): void {
         pending.timeoutId = setTimeout(() => {
             console.log(`Driver ${nextDriver.driverId} did not respond within 25 seconds. Moving to next driver...`);
             tryNextDriver(customerId);
-        }, 25000); // 25 seconds
+        }, 25 * timeDelay()); // 25 seconds
         
         console.log(`Sent request from customer ${customerId} to driver ${nextDriver.driverId} (distance: ${nextDriver.distance.toFixed(2)}km, advice: ${request.advice})`);
     } else {
@@ -234,6 +275,32 @@ app.get('/api/customers', (req: Request, res: Response) => {
         success: true,
         count: customers.length,
         data: customers
+    });
+});
+
+// Get earnings statistics
+app.get('/api/earnings', (req: Request, res: Response) => {
+    const earningsData: Array<{ driverId: string; earnings: number }> = [];
+    let totalEarnings = 0;
+    
+    driverEarnings.forEach((earnings, driverId) => {
+        earningsData.push({ driverId, earnings });
+        totalEarnings += earnings;
+    });
+    
+    const driverCount = earningsData.length;
+    const avgEarnings = driverCount > 0 ? totalEarnings / driverCount : 0;
+    
+    res.json({
+        success: true,
+        data: {
+            drivers: earningsData,
+            statistics: {
+                totalDrivers: driverCount,
+                totalEarnings: totalEarnings,
+                averageEarnings: avgEarnings
+            }
+        }
     });
 });
 
@@ -353,6 +420,11 @@ wss.on('connection', (ws: WebSocket) => {
                     }
                     
                     console.log(`Driver ${driverId} accepted request from customer ${customerId}`);
+                    
+                    // Update driver earnings
+                    if (pending?.request?.price) {
+                        updateDriverEarnings(driverId, pending.request.price);
+                    }
                     
                     // Broadcast to monitors (include request details for earnings tracking)
                     broadcastToMonitors({

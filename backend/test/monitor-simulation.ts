@@ -40,6 +40,7 @@ let totalRidesCompleted = 0;
 let totalRidesInProgress = 0;
 let totalDriversAvailable = 0;
 let totalEarnings = 0;
+let avgEarningsPerDriver = 0;
 
 // Clear console and move cursor to top
 function clearScreen() {
@@ -58,6 +59,7 @@ function drawHeader() {
 function drawDashboard() {
     console.log(colors.bright + '📊 STATISTICS:' + colors.reset);
     console.log(`  ${colors.magenta}💰 Total Earnings: €${totalEarnings.toFixed(2)}${colors.reset}`);
+    console.log(`  ${colors.magenta}📊 Avg Earnings/Driver: €${avgEarningsPerDriver.toFixed(2)}${colors.reset}`);
     console.log(`  ${colors.green}Available Drivers: ${totalDriversAvailable}${colors.reset}`);
     console.log(`  ${colors.yellow}Rides In Progress: ${totalRidesInProgress}${colors.reset}`);
     console.log(`  ${colors.blue}Rides Completed: ${totalRidesCompleted}${colors.reset}`);
@@ -73,6 +75,7 @@ function drawDriverTable() {
         'Driver ID'.padEnd(15) +
         'Status'.padEnd(15) +
         'Location'.padEnd(25) +
+        'Earnings'.padEnd(12) +
         'Rest Time'.padEnd(15) +
         colors.reset
     );
@@ -91,6 +94,10 @@ function drawDriverTable() {
             `(${driver.location.lat.toFixed(4)}, ${driver.location.lon.toFixed(4)})` : 
             'Unknown';
         
+        const earnings = driver.totalEarnings !== undefined ? 
+            `€${driver.totalEarnings.toFixed(2)}` : 
+            '€0.00';
+        
         const restTime = driver.restTime >= 0 ? 
             `${driver.restTime}s` : 
             colors.red + 'On Trip' + colors.reset;
@@ -99,6 +106,7 @@ function drawDriverTable() {
             driver.driverId.padEnd(15) +
             status.padEnd(15 + 9) + // +9 for ANSI codes
             location.padEnd(25) +
+            earnings.padEnd(12) +
             restTime
         );
     }
@@ -109,7 +117,7 @@ function drawDriverTable() {
 
 // Draw recent activity log
 const activityLog: string[] = [];
-const MAX_LOG_ENTRIES = 10;
+const MAX_LOG_ENTRIES = 15;
 
 function addActivity(message: string) {
     const timestamp = new Date().toLocaleTimeString();
@@ -149,6 +157,7 @@ function updateDisplay() {
 function updateStatistics() {
     totalDriversAvailable = 0;
     totalRidesInProgress = 0;
+    totalEarnings = 0;
     
     for (const driver of drivers.values()) {
         if (driver.isBusy) {
@@ -156,7 +165,14 @@ function updateStatistics() {
         } else {
             totalDriversAvailable++;
         }
+        // Add up all driver earnings
+        if (driver.totalEarnings) {
+            totalEarnings += driver.totalEarnings;
+        }
     }
+    
+    // Calculate average earnings per driver
+    avgEarningsPerDriver = drivers.size > 0 ? totalEarnings / drivers.size : 0;
 }
 
 // Monitor server via WebSocket
@@ -184,7 +200,8 @@ function monitorServer(serverUrl: string) {
                             driverId: message.driverId,
                             location: message.location,
                             restTime: message.restTime,
-                            isBusy: false
+                            isBusy: false,
+                            totalEarnings: 0
                         });
                         addActivity(
                             `${colors.cyan}📍 Driver ${message.driverId} registered${colors.reset}`
@@ -204,9 +221,9 @@ function monitorServer(serverUrl: string) {
                             totalRidesCompleted++;
                             // Add earnings from completed ride
                             if (driver.currentRidePrice) {
-                                totalEarnings += driver.currentRidePrice;
+                                driver.totalEarnings = (driver.totalEarnings || 0) + driver.currentRidePrice;
                                 addActivity(
-                                    `${colors.green}✓ Driver ${message.driverId} completed ride - earned €${driver.currentRidePrice.toFixed(2)}${colors.reset}`
+                                    `${colors.green}✓ Driver ${message.driverId} completed ride - earned €${driver.currentRidePrice.toFixed(2)} (Total: €${driver.totalEarnings.toFixed(2)})${colors.reset}`
                                 );
                                 driver.currentRidePrice = undefined;
                             } else {

@@ -3,6 +3,10 @@ import fs from 'fs';
 import path from 'path';
 
 
+export function timeDelay(): number {
+  // return 1000 * 60
+  return 100
+}
 // Haversine distance in kilometers
 function haversineDistance(
   lat1: number, lon1: number, lat2: number, lon2: number
@@ -24,6 +28,8 @@ function haversineDistance(
   const a = Math.sin(dlat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dlon / 2) ** 2;
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
+  console.log(`Haversine distance calculation: (${lat1}, ${lon1}) to (${lat2}, ${lon2}) => ${R * c} km`);
+  
   return R * c;
 }
 

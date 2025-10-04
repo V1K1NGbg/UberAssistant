@@ -2,6 +2,9 @@ import WebSocket from 'ws';
 import fs from 'fs';
 import path from 'path';
 import http from 'http';
+import { getRequests, timeDelay } from './../src/utilities';
+
+const driversCount = 10;
 
 interface Location {
     lat: number;
@@ -55,7 +58,8 @@ function loadHeatmapData(): Location[] {
         if (!line.trim()) continue;
         
         const parts = line.split(',');
-        if (parts.length >= 7) {
+
+        if (parts.length >= 7 && parseInt(parts[3]) === 1) {
             const lat = parseFloat(parts[9]);
             const lon = parseFloat(parts[10]);
             
@@ -70,9 +74,8 @@ function loadHeatmapData(): Location[] {
 
 // Load sample ride requests
 function loadSampleRequests(): RideRequest[] {
-    const requestsPath = path.join(__dirname, '../storage/sample_requests.json');
-    const jsonData = fs.readFileSync(requestsPath, 'utf-8');
-    return JSON.parse(jsonData);
+    const requests = getRequests();
+    return requests.slice(0, 200);
 }
 
 // Get a random location from the dataset
@@ -140,7 +143,7 @@ function registerDriver(driver: DriverSimulation, serverUrl: string): Promise<vo
                     
                     console.log(`Driver ${driver.driverId} updated - location: (${driver.location.lat.toFixed(4)}, ${driver.location.lon.toFixed(4)}), rest time: ${driver.restTime}s`);
                 }
-            }, 10000); // 10 seconds
+            }, 10 * timeDelay()); // 10 seconds
             
             resolve();
         });
@@ -161,7 +164,9 @@ function registerDriver(driver: DriverSimulation, serverUrl: string): Promise<vo
                     console.log(`  Price: $${message.request.price.toFixed(2)}, Duration: ${message.request.duration_mins} mins`);
                     
                     
-                    if (message.request.advice && message.request.advice.toLowerCase() === 'yes') {
+                    // if (true) {
+                    // if (Math.random() < 0.4) {
+                    if ((message.request.advice && message.request.advice.toLowerCase() === 'yes')) {
                         // Accept the request
                         driver.isBusy = true;
                         driver.restTime = -1; // Mark as busy
@@ -178,7 +183,7 @@ function registerDriver(driver: DriverSimulation, serverUrl: string): Promise<vo
                         
                         console.log(`Driver ${driver.driverId} ✓ accepted the ride request`);
                         
-                        const rideDurationMs = message.request.duration_mins * 1000;
+                        const rideDurationMs = message.request.duration_mins * timeDelay();
                         
                         setTimeout(() => {
                             // Update location to destination
@@ -233,81 +238,100 @@ function registerDriver(driver: DriverSimulation, serverUrl: string): Promise<vo
     });
 }
 
-// Send ride requests one by one
+// Send ride requests in timeslots
 async function sendRideRequests(requests: RideRequest[], serverPort: number) {
-    console.log(`\n=== Starting to send ${requests.length} ride requests (one every 5 seconds) ===\n`);
+    const TIMESLOTS = 20;
+    const REQUESTS_PER_TIMESLOT = driversCount;
+    const totalRequests = TIMESLOTS * REQUESTS_PER_TIMESLOT;
     
-    for (let i = 0; i < requests.length; i++) {
-        const request = requests[i];
+    console.log(`\n=== Starting to send ${totalRequests} ride requests in ${TIMESLOTS} timeslots (${REQUESTS_PER_TIMESLOT} requests per timeslot) ===\n`);
+    
+    let requestIndex = 0;
+    
+    for (let timeslot = 0; timeslot < TIMESLOTS; timeslot++) {
+        console.log(`\n--- TIMESLOT ${timeslot + 1}/${TIMESLOTS} ---`);
         
-        console.log(`\n[Request ${i + 1}/${requests.length}] Sending ride request for customer ${request.customer_id}`);
-        console.log(`  From: (${request.from_location.lat.toFixed(4)}, ${request.from_location.lon.toFixed(4)})`);
-        console.log(`  To: (${request.to_location.lat.toFixed(4)}, ${request.to_location.lon.toFixed(4)})`);
-        console.log(`  Price: $${request.price.toFixed(2)}, Duration: ${request.duration_mins} mins`);
-        
-        // Prepare the request body
-        const postData = JSON.stringify(request);
-        
-        // Send HTTP POST request
-        await new Promise<void>((resolve, reject) => {
-            const options = {
-                hostname: 'localhost',
-                port: serverPort,
-                path: '/api/customer_request',
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Content-Length': Buffer.byteLength(postData)
-                }
-            };
+        // Send n requests in this timeslot
+        for (let j = 0; j < REQUESTS_PER_TIMESLOT; j++) {
+            if (requestIndex >= requests.length) {
+                console.log(`  ⚠ Ran out of requests, stopping...`);
+                break;
+            }
             
-            const req = http.request(options, (res) => {
-                let responseData = '';
-                
-                res.on('data', (chunk) => {
-                    responseData += chunk;
-                });
-                
-                res.on('end', () => {
-                    if (res.statusCode === 201) {
-                        console.log(`  ✓ Request sent successfully to API`);
-                        try {
-                            const response = JSON.parse(responseData);
-                            console.log(`  Server response: ${response.message}`);
-                        } catch (e) {
-                            // Ignore JSON parse errors
-                        }
-                    } else {
-                        console.log(`  ✗ Request failed with status ${res.statusCode}`);
+            const request = requests[requestIndex];
+            
+            console.log(`\n[Request ${requestIndex + 1}/${totalRequests}] Sending ride request for customer ${request.customer_id}`);
+            console.log(`  From: (${request.from_location.lat.toFixed(4)}, ${request.from_location.lon.toFixed(4)})`);
+            console.log(`  To: (${request.to_location.lat.toFixed(4)}, ${request.to_location.lon.toFixed(4)})`);
+            console.log(`  Price: $${request.price.toFixed(2)}, Duration: ${request.duration_mins} mins`);
+            
+            // Prepare the request body
+            const postData = JSON.stringify(request);
+            
+            // Send HTTP POST request
+            await new Promise<void>((resolve, reject) => {
+                const options = {
+                    hostname: 'localhost',
+                    port: serverPort,
+                    path: '/api/customer_request',
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Content-Length': Buffer.byteLength(postData)
                     }
-                    resolve();
+                };
+                
+                const req = http.request(options, (res) => {
+                    let responseData = '';
+                    
+                    res.on('data', (chunk) => {
+                        responseData += chunk;
+                    });
+                    
+                    res.on('end', () => {
+                        if (res.statusCode === 201) {
+                            console.log(`  ✓ Request sent successfully to API`);
+                            try {
+                                const response = JSON.parse(responseData);
+                                console.log(`  Server response: ${response.message}`);
+                            } catch (e) {
+                                // Ignore JSON parse errors
+                            }
+                        } else {
+                            console.log(`  ✗ Request failed with status ${res.statusCode}`);
+                        }
+                        resolve();
+                    });
                 });
+                
+                req.on('error', (error) => {
+                    console.error(`  ✗ Error sending request:`, error.message);
+                    resolve(); // Continue with next request even if this one fails
+                });
+                
+                req.write(postData);
+                req.end();
             });
             
-            req.on('error', (error) => {
-                console.error(`  ✗ Error sending request:`, error.message);
-                resolve(); // Continue with next request even if this one fails
-            });
-            
-            req.write(postData);
-            req.end();
-        });
+            requestIndex++;
+        }
         
-        // Wait 5 seconds before sending the next request (except for the last one)
-        if (i < requests.length - 1) {
-            console.log(`  Waiting 5 seconds before next request...`);
-            await new Promise(resolve => setTimeout(resolve, 5000));
+        // Wait 20-40 seconds before the next timeslot (except for the last one)
+        if (timeslot < TIMESLOTS - 1) {
+            const waitTime = 20 + Math.random() * 20; // Random between 20-40 seconds
+            console.log(`\n  ⏳ Waiting ${waitTime.toFixed(1)} seconds before next timeslot...`);
+            await new Promise(resolve => setTimeout(resolve, waitTime * timeDelay()));
         }
     }
     
-    console.log(`\n=== All ${requests.length} ride requests have been sent ===\n`);
+    console.log(`\n=== All ${requestIndex} ride requests have been sent ===\n`);
 }
 
 // Main function
 async function main() {
     const SERVER_URL = 'ws://localhost:3000';
     const SERVER_PORT = 3000;
-    const DRIVER_COUNT = 10;
+    const DRIVER_COUNT = driversCount;
     
     console.log('=== Driver Simulation Starting ===\n');
     console.log(`Creating ${DRIVER_COUNT} driver simulations...\n`);
@@ -331,7 +355,7 @@ async function main() {
     console.log('Waiting 3 seconds before starting ride requests...\n');
     
     // Wait a bit to ensure all drivers are fully registered
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    await new Promise(resolve => setTimeout(resolve, 3 * timeDelay()));
     
     // Load and send ride requests
     const requests = loadSampleRequests();
