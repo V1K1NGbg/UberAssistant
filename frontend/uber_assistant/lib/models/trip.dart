@@ -2,22 +2,41 @@ import 'customer_request.dart';
 
 class Trip {
   final CustomerRequest request;
-  final DateTime startedAt;
+  final DateTime start;
   final Duration duration;
+  final DateTime? completedAt;
 
-  Trip({required this.request, required this.startedAt, required this.duration});
+  Trip({
+    required this.request,
+    required this.start,
+    required this.duration,
+    this.completedAt,
+  });
 
-  double progress(DateTime now) {
-    final elapsed = now.difference(startedAt);
-    final totalMs = duration.inMilliseconds;
-    final p = (elapsed.inMilliseconds / totalMs).clamp(0.0, 1.0);
-    return p.toDouble();
-  }
+  factory Trip.fromRequest(CustomerRequest req, DateTime start, Duration duration) =>
+      Trip(request: req, start: start, duration: duration);
+
+  // convenience getters for UI
+  get from => request.from;
+  get to => request.to;
 
   Duration remaining(DateTime now) {
-    final left = duration - now.difference(startedAt);
+    if (completedAt != null) return Duration.zero;
+    final end = start.add(duration);
+    final left = end.difference(now);
     return left.isNegative ? Duration.zero : left;
   }
 
-  bool get isDone => DateTime.now().isAfter(startedAt.add(duration));
+  double progress(DateTime now) {
+    if (completedAt != null) return 1.0;
+    final elapsed = now.difference(start).inMilliseconds.clamp(0, duration.inMilliseconds);
+    return duration.inMilliseconds == 0 ? 1.0 : elapsed / duration.inMilliseconds;
+  }
+
+  Trip completeNow() => Trip(
+    request: request,
+    start: start,
+    duration: duration,
+    completedAt: DateTime.now(),
+  );
 }

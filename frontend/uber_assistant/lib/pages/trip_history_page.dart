@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../models/trip_record.dart';
 import '../providers/app_state.dart';
 import '../l10n/app_localizations.dart';
 import '../models/trip_log_entry.dart';
@@ -25,13 +26,34 @@ class _TripHistoryPageState extends State<TripHistoryPage> {
     final t = AppLocalizations.of(context)!;
     final app = context.watch<AppState>();
 
-    final items = _filter(app.history);
-    items.sort((a,b) {
+    // copy so we don't mutate the provider's list in-place
+    final items = List<TripRecord>.from(app.history);
+
+    int statusRank(TripStatus s) => s == TripStatus.completed ? 0 : 1; // completed before canceled
+
+    items.sort((a, b) {
       switch (sort) {
-        case HistorySort.earningsHighLow: return b.price.compareTo(a.price);
-        case HistorySort.earningsLowHigh: return a.price.compareTo(b.price);
-        case HistorySort.statusCompleted:  return (a.cancelled ? 1 : 0) - (b.cancelled ? 1 : 0);
-        case HistorySort.statusCancelled:  return (b.cancelled ? 1 : 0) - (a.cancelled ? 1 : 0);
+        case HistorySort.earningsHighLow:
+          final byPrice = b.price.compareTo(a.price); // high → low
+          if (byPrice != 0) return byPrice;
+          return b.start.compareTo(a.start); // newer first as tiebreaker
+
+        case HistorySort.earningsLowHigh:
+          final byPrice = a.price.compareTo(b.price); // low → high
+          if (byPrice != 0) return byPrice;
+          return b.start.compareTo(a.start);
+
+        case HistorySort.statusCompleted:
+        // completed first, then canceled
+          final byStatus = statusRank(a.status).compareTo(statusRank(b.status));
+          if (byStatus != 0) return byStatus;
+          return b.start.compareTo(a.start);
+
+        case HistorySort.statusCancelled:
+        // canceled first, then completed (invert the rank)
+          final byStatus = statusRank(b.status).compareTo(statusRank(a.status));
+          if (byStatus != 0) return byStatus;
+          return b.start.compareTo(a.start);
       }
     });
 
@@ -84,8 +106,8 @@ class _TripHistoryPageState extends State<TripHistoryPage> {
                 final timeDep = _fmtTime(e.start);
                 final timeArr = e.end == null ? '-' : _fmtTime(e.end!);
                 final addr = e.to.address ?? '(${e.to.lat.toStringAsFixed(5)}, ${e.to.lon.toStringAsFixed(5)})';
-                final status = e.cancelled ? t.statusCancelled : t.statusCompleted;
-                final color  = e.cancelled ? Theme.of(context).colorScheme.error : K.successGreen;
+                final status = e.canceled ? t.statusCancelled : t.statusCompleted;
+                final color  = e.canceled ? Theme.of(context).colorScheme.error : K.successGreen;
 
                 return InkWell(
                   onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => _TripDetails(entry: e))),

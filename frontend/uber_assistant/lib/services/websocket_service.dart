@@ -1,94 +1,93 @@
-import 'dart:async';
 import 'dart:convert';
 import 'package:web_socket_channel/web_socket_channel.dart';
-import 'package:web_socket_channel/status.dart' as ws_status;
-import 'package:geolocator/geolocator.dart';
-import '../constants.dart';
 import '../models/customer_request.dart';
-import '../models/geo_point.dart';
 import '../models/websocket_message.dart';
 
 class WebSocketService {
   WebSocketChannel? _channel;
-  Timer? _heartbeat;
-  final _incomingCtrl = StreamController<CustomerRequest>.broadcast();
-  Stream<CustomerRequest> get incomingRequests => _incomingCtrl.stream;
+  String? _driverId;
+  String? _wsUrl;
 
-  String serverWs = K.wsDefault;
-  String driverId = '';
-  double restTimeMinutes = 0;
+  void Function(CustomerRequest req)? onOffer;
+  void Function(String error)? onError;
+  void Function()? onDisconnected;
 
-  Future<void> connect({required String driverId, required String serverIp}) async {
-    this.driverId = driverId;
-    serverWs = 'ws://$serverIp:3000';
-    _channel?.sink.close();
-    _channel = WebSocketChannel.connect(Uri.parse(serverWs));
-    _channel!.stream.listen(_onMessage, onError: (_) => _reconnect(), onDone: () => _reconnect());
+  Future<void> connect(String url, {required String driverId}) async {
+    _wsUrl = url;
+    _driverId = driverId;
 
-    // send register immediately
-    final loc = await _getLocation();
-    _send(WsMsg(
-      type: 'register',
-      driverId: driverId,
-      location: loc,
-      restTime: restTimeMinutes,
-    ));
+    try {
+      _channel = WebSocketChannel.connect(Uri.parse(url));
+    } catch (e) {
+      onError?.call('Failed to connect: $e');
+      rethrow;
+    }
 
-    // heartbeat every 10 sec
-    _heartbeat?.cancel();
-    _heartbeat = Timer.periodic(const Duration(seconds: K.wsHeartbeatSeconds), (_) async {
-      final l = await _getLocation();
-      _send(WsMsg(type: 'update', driverId: driverId, location: l, restTime: restTimeMinutes));
+    _channel!.stream.listen(_onMessage, onError: (e) {
+      onError?.call('WebSocket error: $e');
+    }, onDone: () async {
+      // notify disconnection
+      onDisconnected?.call();
+      // simple auto-reconnect
+      if (_wsUrl != null && _driverId != null) {
+        try {
+          await reconnect(_wsUrl!);
+        } catch (_) {}
+      }
     });
   }
 
+  Future<void> reconnect(String url) async {
+    await disconnect();
+    await connect(url, driverId: _driverId!);
+  }
+
   Future<void> disconnect() async {
-    _heartbeat?.cancel();
-    _send(WsMsg(type: 'deregister', driverId: driverId));
-    await _channel?.sink.close(ws_status.normalClosure);
-    _channel = null;
-  }
-
-  void _reconnect() {
-    // lite: leave reconnecting to caller (app toggles), or implement backoff if needed
-  }
-
-  void _send(WsMsg msg) {
-    final msgStr = msg.toString();
-    print('Sent: $msgStr');
-    _channel?.sink.add(jsonEncode(msg.toJson()));
-  }
-
-  Future<GeoPoint> _getLocation() async {
-    final p = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.best);
-    return GeoPoint(lat: p.latitude, lon: p.longitude);
+    await _channel?.sink.close();
   }
 
   void _onMessage(dynamic message) {
-    final msgStr = message.toString();
-    print('Received: $msgStr');
     try {
-      final Map<String, dynamic> j = jsonDecode(message as String);
-      final msg = WsMsg.fromJson(j);
-      if (msg.type == 'ride_request' && msg.request != null) {
-        _incomingCtrl.add(msg.request!);
+      final Map<String, dynamic> j = jsonDecode(message.toString());
+      if (j['type'] == 'ride_request' && j['request'] != null) {
+        final req = CustomerRequest.fromJson(j['request'] as Map<String, dynamic>);
+        onOffer?.call(req);
       }
-    } catch (_) {}
+    } catch (e) {
+      onError?.call('Bad message: $e');
+    }
   }
 
-  void respond({required String customerId, required bool accept}) async {
-    final l = await _getLocation();
-    _send(WsMsg(
-      type: 'response',
-      driverId: driverId,
-      customerId: customerId,
-      response: accept ? 'accept' : 'deny',
-      location: l,
-      restTime: accept ? -1 : restTimeMinutes,
-    ));
+  Future<void> sendRegister({double? lat, double? lon, double? restMinutes}) async {
+    if (_driverId == null) return;
+    final msg = WsMsg.register(driverId: _driverId!, lat: lat, lon: lon, restTime: restMinutes);
+    _channel?.sink.add(jsonEncode(msg.toJson()));
   }
 
-  void updateRest(double minutes) {
-    restTimeMinutes = minutes;
+  Future<void> deregister() async {
+    if (_driverId == null) return;
+    final msg = WsMsg.deregister(driverId: _driverId!);
+    _channel?.sink.add(jsonEncode(msg.toJson()));
+  }
+
+  Future<void> sendUpdate({double? lat, double? lon, double? restMinutes}) async {
+    if (_driverId == null) return;
+    final msg = WsMsg.update(driverId: _driverId!, lat: lat, lon: lon, restTime: restMinutes);
+    _channel?.sink.add(jsonEncode(msg.toJson()));
+  }
+
+  Future<void> sendResponse({
+    required String customerId,
+    required bool accept,
+    double? lat,
+    double? lon,
+    double? restMinutes,
+  }) async {
+    if (_driverId == null) return;
+    final msg = WsMsg.response(
+      driverId: _driverId!, customerId: customerId, accept: accept,
+      lat: lat, lon: lon, restTime: restMinutes,
+    );
+    _channel?.sink.add(jsonEncode(msg.toJson()));
   }
 }
