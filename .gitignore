@@ -163,3 +163,5 @@ app.*.symbols
 /frontend/uber_assistant/android/app/debug
 /frontend/uber_assistant/android/app/profile
 /frontend/uber_assistant/android/app/release
+backend/node_modules
+backend/package-lock.json
