@@ -35,6 +35,12 @@ dependencies:
   flutter_localizations:
     sdk: flutter
 
+  flutter_map: ^7.0.0
+  flutter_map_heatmap: ^0.0.8
+  latlong2: ^0.9.1
+  h3_flutter: ^0.7.0
+  csv: ^6.0.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -49,3 +55,4 @@ flutter:
     - assets/images/onboarding_1.png
     - assets/images/onboarding_2.png
     - assets/images/onboarding_3.png
+    - assets/data/heatmap.csv
