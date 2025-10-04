@@ -1,7 +1,8 @@
 import express, { Request, Response } from 'express';
-import http from 'http';
+import http, { get } from 'http';
 import WebSocket from 'ws';
 import StorageManager, { Customer, CustomerRequest, Driver, DriverStatus } from './storage';
+import { getAdvice } from './utilities';
 
 const app = express();
 const PORT = 3000;
@@ -20,6 +21,19 @@ interface WebSocketMessage {
 
 // Initialize storage manager
 const storageManager = new StorageManager();
+
+// Store monitor connections
+const monitors = new Set<WebSocket>();
+
+// Broadcast event to all monitors
+function broadcastToMonitors(event: any): void {
+    const message = JSON.stringify(event);
+    monitors.forEach(monitor => {
+        if (monitor.readyState === WebSocket.OPEN) {
+            monitor.send(message);
+        }
+    });
+}
 
 // Store pending requests waiting for driver responses
 const pendingRequests = new Map<string, {
@@ -63,14 +77,9 @@ function getDriversSortedByDistance(request: CustomerRequest): Array<{ driverId:
     return driversWithDistance.sort((a, b) => a.distance - b.distance);
 }
 
-// Placeholder function for getting advice on whether to accept the request
-// TODO: Implement the actual advice logic
+// Function to get advice for a specific driver and request
 function getAdviceForRequest(request: CustomerRequest, driver: DriverStatus): string {
-    if (request.price/request.duration_mins > 0.5) {
-        return 'yes';
-    } else {
-        return 'no';
-    }
+    return getAdvice(driver, request);
 }
 
 // Function to send request to driver via WebSocket
@@ -81,11 +90,16 @@ function sendRequestToDriver(driverId: string, request: CustomerRequest): boolea
     }
 
     try {
-        ws.send(JSON.stringify({
+        const event = {
             type: 'ride_request',
             driverId: driverId,
             request: request,
-        }));
+        };
+        ws.send(JSON.stringify(event));
+        
+        // Broadcast to monitors
+        broadcastToMonitors(event);
+        
         return true;
     } catch (error) {
         console.error(`Error sending request to driver ${driverId}:`, error);
@@ -226,12 +240,21 @@ app.get('/api/customers', (req: Request, res: Response) => {
 // WebSocket connection handler
 wss.on('connection', (ws: WebSocket) => {
     let driverId: string;
+    let isMonitor = false;
 
-    console.log('Driver connected');
+    console.log('Client connected');
 
     ws.on('message', (message: WebSocket.Data) => {
         try {
             const data: WebSocketMessage = JSON.parse(message.toString());
+
+            // Handle monitor registration
+            if (data.type === 'monitor') {
+                isMonitor = true;
+                monitors.add(ws);
+                console.log('Monitor client connected');
+                return;
+            }
 
             // Handle driver registration
             if (data.type === 'register' && data.driverId) {
@@ -245,6 +268,14 @@ wss.on('connection', (ws: WebSocket) => {
                         restTime: data.restTime
                     });
                     console.log(`Driver ${driverId} location/status updated`);
+                    
+                    // Broadcast to monitors
+                    broadcastToMonitors({
+                        type: 'register',
+                        driverId: driverId,
+                        location: data.location,
+                        restTime: data.restTime
+                    });
                 } else {
                     console.log(`Driver ${driverId} location/status update failed`);
                     console.log(data)
@@ -256,6 +287,12 @@ wss.on('connection', (ws: WebSocket) => {
                 driverId = data.driverId;
                 storageManager.deleteActiveConnection(driverId);
                 console.log(`Driver ${driverId} deregistered`);
+                
+                // Broadcast to monitors
+                broadcastToMonitors({
+                    type: 'deregister',
+                    driverId: driverId
+                });
             }
 
             // Save/update driver location and rest time
@@ -267,6 +304,14 @@ wss.on('connection', (ws: WebSocket) => {
                         restTime: data.restTime
                     });
                     console.log(`Driver ${driverId} location/status updated`);
+                    
+                    // Broadcast to monitors
+                    broadcastToMonitors({
+                        type: 'update',
+                        driverId: driverId,
+                        location: data.location,
+                        restTime: data.restTime
+                    });
                 } else {
                     console.log(`Driver ${driverId} location/status update failed`);
                     console.log(data)
@@ -287,6 +332,14 @@ wss.on('connection', (ws: WebSocket) => {
                     
                     console.log(`Driver ${driverId} denied request from customer ${customerId}. Trying next driver...`);
                     
+                    // Broadcast to monitors
+                    broadcastToMonitors({
+                        type: 'response',
+                        driverId: driverId,
+                        customerId: customerId,
+                        response: 'deny'
+                    });
+                    
                     // Try the next closest driver
                     tryNextDriver(customerId);
                 } else if (data.response === 'accept' && data.customerId) {
@@ -300,6 +353,15 @@ wss.on('connection', (ws: WebSocket) => {
                     }
                     
                     console.log(`Driver ${driverId} accepted request from customer ${customerId}`);
+                    
+                    // Broadcast to monitors (include request details for earnings tracking)
+                    broadcastToMonitors({
+                        type: 'response',
+                        driverId: driverId,
+                        customerId: customerId,
+                        response: 'accept',
+                        request: pending?.request
+                    });
                     
                     // Remove from pending requests
                     pendingRequests.delete(customerId);
@@ -322,8 +384,16 @@ wss.on('connection', (ws: WebSocket) => {
     });
 
     ws.on('close', () => {
-        if (driverId) {
+        if (isMonitor) {
+            monitors.delete(ws);
+            console.log('Monitor client disconnected');
+        } else if (driverId) {
             storageManager.deleteActiveConnection(driverId);
+            // Broadcast to monitors
+            broadcastToMonitors({
+                type: 'deregister',
+                driverId: driverId
+            });
             console.log(`Driver ${driverId} deregistered and disconnected`);
         } else {
             console.log('Client disconnected');

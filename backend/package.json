@@ -12,7 +12,8 @@
     "dev": "ts-node src/index.ts",
     "watch": "tsc --watch",
     "test": "ts-node test/driver-simulation.ts",
-    "test:drivers": "ts-node test/driver-simulation.ts"
+    "test:drivers": "ts-node test/driver-simulation.ts",
+    "test:monitor": "npx ts-node test/monitor-simulation.ts"
   },
   "dependencies": {
     "express": "^5.1.0",

@@ -1,6 +1,7 @@
 import WebSocket from 'ws';
 import fs from 'fs';
 import path from 'path';
+import http from 'http';
 
 interface Location {
     lat: number;
@@ -159,47 +160,62 @@ function registerDriver(driver: DriverSimulation, serverUrl: string): Promise<vo
                     console.log(`  Advice: ${message.request.advice || 'N/A'}`);
                     console.log(`  Price: $${message.request.price.toFixed(2)}, Duration: ${message.request.duration_mins} mins`);
                     
-                    // Automatically accept the request
-                    driver.isBusy = true;
-                    driver.restTime = -1; // Mark as busy
                     
-                    // Send acceptance response
-                    ws.send(JSON.stringify({
-                        type: 'response',
-                        driverId: driver.driverId,
-                        customerId: message.request.customer_id,
-                        response: 'accept',
-                        location: driver.location,
-                        restTime: driver.restTime
-                    }));
-                    
-                    console.log(`Driver ${driver.driverId} ✓ automatically accepted the ride request`);
-                    
-                    const rideDurationMs = message.request.duration_mins * 1000;
-                    
-                    setTimeout(() => {
-                        // Update location to destination
-                        driver.location = {
-                            lat: message.request.to_location.lat,
-                            lon: message.request.to_location.lon
-                        };
+                    if (message.request.advice && message.request.advice.toLowerCase() === 'yes') {
+                        // Accept the request
+                        driver.isBusy = true;
+                        driver.restTime = -1; // Mark as busy
                         
-                        // Reset rest time to 0
-                        driver.restTime = 0;
-                        driver.isBusy = false;
+                        // Send acceptance response
+                        ws.send(JSON.stringify({
+                            type: 'response',
+                            driverId: driver.driverId,
+                            customerId: message.request.customer_id,
+                            response: 'accept',
+                            location: driver.location,
+                            restTime: driver.restTime
+                        }));
                         
-                        // Send update to server
-                        if (driver.ws && driver.ws.readyState === WebSocket.OPEN) {
-                            driver.ws.send(JSON.stringify({
-                                type: 'update',
-                                driverId: driver.driverId,
-                                location: driver.location,
-                                restTime: driver.restTime
-                            }));
-                        }
+                        console.log(`Driver ${driver.driverId} ✓ accepted the ride request`);
                         
-                        console.log(`Driver ${driver.driverId} completed ride - new location: (${driver.location.lat.toFixed(4)}, ${driver.location.lon.toFixed(4)}), rest time reset to 0s`);
-                    }, rideDurationMs);
+                        const rideDurationMs = message.request.duration_mins * 1000;
+                        
+                        setTimeout(() => {
+                            // Update location to destination
+                            driver.location = {
+                                lat: message.request.to_location.lat,
+                                lon: message.request.to_location.lon
+                            };
+                            
+                            // Reset rest time to 0
+                            driver.restTime = 0;
+                            driver.isBusy = false;
+                            
+                            // Send update to server
+                            if (driver.ws && driver.ws.readyState === WebSocket.OPEN) {
+                                driver.ws.send(JSON.stringify({
+                                    type: 'update',
+                                    driverId: driver.driverId,
+                                    location: driver.location,
+                                    restTime: driver.restTime
+                                }));
+                            }
+                            
+                            console.log(`Driver ${driver.driverId} completed ride - new location: (${driver.location.lat.toFixed(4)}, ${driver.location.lon.toFixed(4)}), rest time reset to 0s`);
+                        }, rideDurationMs);
+                    } else {
+                        // Decline the request
+                        ws.send(JSON.stringify({
+                            type: 'response',
+                            driverId: driver.driverId,
+                            customerId: message.request.customer_id,
+                            response: 'deny',
+                            location: driver.location,
+                            restTime: driver.restTime
+                        }));
+                        
+                        console.log(`Driver ${driver.driverId} ✗ denied the ride request`);
+                    }
                 }
             } catch (error) {
                 console.error(`Error processing message for driver ${driver.driverId}:`, error);
@@ -218,7 +234,7 @@ function registerDriver(driver: DriverSimulation, serverUrl: string): Promise<vo
 }
 
 // Send ride requests one by one
-async function sendRideRequests(requests: RideRequest[], serverUrl: string) {
+async function sendRideRequests(requests: RideRequest[], serverPort: number) {
     console.log(`\n=== Starting to send ${requests.length} ride requests (one every 5 seconds) ===\n`);
     
     for (let i = 0; i < requests.length; i++) {
@@ -229,30 +245,52 @@ async function sendRideRequests(requests: RideRequest[], serverUrl: string) {
         console.log(`  To: (${request.to_location.lat.toFixed(4)}, ${request.to_location.lon.toFixed(4)})`);
         console.log(`  Price: $${request.price.toFixed(2)}, Duration: ${request.duration_mins} mins`);
         
-        // Create a temporary WebSocket connection to send the request
-        const ws = new WebSocket(serverUrl);
+        // Prepare the request body
+        const postData = JSON.stringify(request);
         
+        // Send HTTP POST request
         await new Promise<void>((resolve, reject) => {
-            ws.on('open', () => {
-                // Send the ride request
-                ws.send(JSON.stringify({
-                    type: 'customer_request',
-                    request: request
-                }));
+            const options = {
+                hostname: 'localhost',
+                port: serverPort,
+                path: '/api/customer_request',
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Content-Length': Buffer.byteLength(postData)
+                }
+            };
+            
+            const req = http.request(options, (res) => {
+                let responseData = '';
                 
-                console.log(`  ✓ Request sent to server`);
+                res.on('data', (chunk) => {
+                    responseData += chunk;
+                });
                 
-                // Close the connection after a short delay
-                setTimeout(() => {
-                    ws.close();
+                res.on('end', () => {
+                    if (res.statusCode === 201) {
+                        console.log(`  ✓ Request sent successfully to API`);
+                        try {
+                            const response = JSON.parse(responseData);
+                            console.log(`  Server response: ${response.message}`);
+                        } catch (e) {
+                            // Ignore JSON parse errors
+                        }
+                    } else {
+                        console.log(`  ✗ Request failed with status ${res.statusCode}`);
+                    }
                     resolve();
-                }, 1000);
+                });
             });
             
-            ws.on('error', (error) => {
-                console.error(`  ✗ Error sending request:`, error);
-                reject(error);
+            req.on('error', (error) => {
+                console.error(`  ✗ Error sending request:`, error.message);
+                resolve(); // Continue with next request even if this one fails
             });
+            
+            req.write(postData);
+            req.end();
         });
         
         // Wait 5 seconds before sending the next request (except for the last one)
@@ -268,6 +306,7 @@ async function sendRideRequests(requests: RideRequest[], serverUrl: string) {
 // Main function
 async function main() {
     const SERVER_URL = 'ws://localhost:3000';
+    const SERVER_PORT = 3000;
     const DRIVER_COUNT = 10;
     
     console.log('=== Driver Simulation Starting ===\n');
@@ -296,7 +335,7 @@ async function main() {
     
     // Load and send ride requests
     const requests = loadSampleRequests();
-    await sendRideRequests(requests, SERVER_URL);
+    await sendRideRequests(requests, SERVER_PORT);
     
     // Handle graceful shutdown
     process.on('SIGINT', () => {

@@ -1,5 +1,6 @@
 import { CustomerRequest, DriverStatus } from "./storage";
 import fs from 'fs';
+import path from 'path';
 
 
 // Haversine distance in kilometers
@@ -36,32 +37,46 @@ type DensityPoint = [number, number];
 
 // Compute score
 function getScore(driver: DriverStatus, request: CustomerRequest, densityPoint: DensityPoint): number {
-  const rawData = fs.readFileSync('../../model/model.json', 'utf-8');
+  const modelPath = path.join(__dirname, '../../model/model.json');
+  const rawData = fs.readFileSync(modelPath, 'utf-8');
   const data = JSON.parse(rawData);
   const [x, y, z, w] = data;
 
+  const pickupDistance = distanceMeasure(
+    [driver.location.lat, driver.location.lon], 
+    [request.from_location.lat, request.from_location.lon]
+  );
+  
+  const dropoffToDensityDistance = distanceMeasure(
+    [request.to_location.lat, request.to_location.lon], 
+    densityPoint
+  );
+
   return x * request.price
        + y * request.duration_mins
-       + z * distanceMeasure([driver.location.lat, driver.location.lon], [request.from_location.lat, request.from_location.lon])
-       + w * distanceMeasure([request.to_location.lat, request.to_location.lon], densityPoint)
-       - x ** 2 - y ** 2 - z ** 2 - w ** 2;
+       + z * pickupDistance
+       + w * dropoffToDensityDistance
+       - ((x**2) + (y**2) + (z**2) + (w**2));
 }
 
 export function getAdvice(driver: DriverStatus, request: CustomerRequest): string {
-  const densityDataRaw = fs.readFileSync('../../storage/density_data.json', 'utf-8');
+  const densityDataPath = path.join(__dirname, '../storage/density_data.json');
+  const densityDataRaw = fs.readFileSync(densityDataPath, 'utf-8');
   const densityData = JSON.parse(densityDataRaw);
   const densityPoints: DensityPoint = densityData.density_points;
   const score = getScore(driver, request, densityPoints);
 
+  console.log(`Computed score for driver ${driver.driver_id} and request: ${score.toFixed(2)}`);
   if (score > 10) {
-    return "Yes";
+    return "yes";
   } else {
-    return "No";
+    return "no";
   }
 }
 
 export function getRequests(): CustomerRequest[] {
-  const rawData = fs.readFileSync('../storage/requests.json', 'utf-8');
+  const requestsPath = path.join(__dirname, '../storage/requests.json');
+  const rawData = fs.readFileSync(requestsPath, 'utf-8');
 
   const data = JSON.parse(rawData);
   const formattedRequests: CustomerRequest[] = data.map((req: any) => ({
