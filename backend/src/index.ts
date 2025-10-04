@@ -26,6 +26,8 @@ const pendingRequests = new Map<string, {
     request: CustomerRequest;
     triedDrivers: string[];
     sortedDrivers: Array<{ driverId: string; distance: number }>;
+    currentDriverId?: string;
+    timeoutId?: NodeJS.Timeout;
 }>();
 
 // Helper function to calculate distance between two points (Haversine formula)
@@ -79,6 +81,7 @@ function sendRequestToDriver(driverId: string, request: CustomerRequest): boolea
     try {
         ws.send(JSON.stringify({
             type: 'ride_request',
+            driverId: driverId,
             request: request,
         }));
         return true;
@@ -94,6 +97,12 @@ function tryNextDriver(customerId: string): void {
     if (!pending) {
         console.log(`No pending request found for customer ${customerId}`);
         return;
+    }
+
+    // Clear any existing timeout
+    if (pending.timeoutId) {
+        clearTimeout(pending.timeoutId);
+        pending.timeoutId = undefined;
     }
 
     const { request, triedDrivers, sortedDrivers } = pending;
@@ -124,6 +133,14 @@ function tryNextDriver(customerId: string): void {
     
     if (sent) {
         triedDrivers.push(nextDriver.driverId);
+        pending.currentDriverId = nextDriver.driverId;
+        
+        // Set a 20-second timeout for driver response
+        pending.timeoutId = setTimeout(() => {
+            console.log(`Driver ${nextDriver.driverId} did not respond within 20 seconds. Moving to next driver...`);
+            tryNextDriver(customerId);
+        }, 20000); // 20 seconds
+        
         console.log(`Sent request from customer ${customerId} to driver ${nextDriver.driverId} (distance: ${nextDriver.distance.toFixed(2)}km, advice: ${request.advice})`);
     } else {
         console.log(`Failed to send request to driver ${nextDriver.driverId}, trying next driver`);
@@ -216,7 +233,7 @@ app.get('/api/customers', (req: Request, res: Response) => {
 wss.on('connection', (ws: WebSocket) => {
     let driverId: string;
 
-    console.log('New WebSocket client connected');
+    console.log('Driver connected');
 
     ws.on('message', (message: WebSocket.Data) => {
         try {
@@ -227,6 +244,17 @@ wss.on('connection', (ws: WebSocket) => {
                 driverId = data.driverId;
                 storageManager.setActiveConnection(driverId, ws);
                 console.log(`Driver ${driverId} registered`);
+                if (data.location && data.restTime !== undefined) {
+                    storageManager.setDriverStatus(driverId, {
+                        driver_id: driverId,
+                        location: data.location,
+                        restTime: data.restTime
+                    });
+                    console.log(`Driver ${driverId} location/status updated`);
+                } else {
+                    console.log(`Driver ${driverId} location/status update failed`);
+                    console.log(data)
+                }
             }
 
             // Handle driver deregistration
@@ -238,7 +266,7 @@ wss.on('connection', (ws: WebSocket) => {
 
             // Save/update driver location and rest time
             if (data.type === 'update' && driverId) {
-                if (data.location && data.restTime) {
+                if (data.location && data.restTime !== undefined) {
                     storageManager.setDriverStatus(driverId, {
                         driver_id: driverId,
                         location: data.location,
@@ -247,6 +275,7 @@ wss.on('connection', (ws: WebSocket) => {
                     console.log(`Driver ${driverId} location/status updated`);
                 } else {
                     console.log(`Driver ${driverId} location/status update failed`);
+                    console.log(data)
                 }
             }
 
@@ -254,16 +283,43 @@ wss.on('connection', (ws: WebSocket) => {
             if (data.type === 'response' && driverId && data.response) {
                 if (data.response === 'deny' && data.customerId) {
                     const customerId = data.customerId
+                    const pending = pendingRequests.get(customerId);
+                    
+                    // Clear the timeout since we got a response
+                    if (pending?.timeoutId) {
+                        clearTimeout(pending.timeoutId);
+                        pending.timeoutId = undefined;
+                    }
+                    
                     console.log(`Driver ${driverId} denied request from customer ${customerId}. Trying next driver...`);
                     
                     // Try the next closest driver
                     tryNextDriver(customerId);
                 } else if (data.response === 'accept' && data.customerId) {
                     const customerId = data.customerId
+                    const pending = pendingRequests.get(customerId);
+                    
+                    // Clear the timeout since we got a response
+                    if (pending?.timeoutId) {
+                        clearTimeout(pending.timeoutId);
+                        pending.timeoutId = undefined;
+                    }
+                    
                     console.log(`Driver ${driverId} accepted request from customer ${customerId}`);
                     
                     // Remove from pending requests
                     pendingRequests.delete(customerId);
+                }
+                if (data.location && data.restTime !== undefined) {
+                    storageManager.setDriverStatus(driverId, {
+                        driver_id: driverId,
+                        location: data.location,
+                        restTime: data.restTime
+                    });
+                    console.log(`Driver ${driverId} location/status updated`);
+                } else {
+                    console.log(`Driver ${driverId} location/status update failed`);
+                    console.log(data)
                 }
             }
         } catch (error) {
@@ -274,7 +330,7 @@ wss.on('connection', (ws: WebSocket) => {
     ws.on('close', () => {
         if (driverId) {
             storageManager.deleteActiveConnection(driverId);
-            console.log(`Driver ${driverId} disconnected`);
+            console.log(`Driver ${driverId} deregistered and disconnected`);
         } else {
             console.log('Client disconnected');
         }
