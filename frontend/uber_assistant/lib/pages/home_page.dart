@@ -16,22 +16,19 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context)!;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       appBar: AppBar(
-        title: Row(
-          children: [
-            // App icon next to title; tint to black in light mode
-            Image.asset(
-              'assets/images/app_icon_new.png',
-              height: 24,
-              color: isDark ? null : Colors.black,
-              colorBlendMode: isDark ? null : BlendMode.srcIn,
-            ),
-            const SizedBox(width: 8),
-            Text(t.homeTitle),
-          ],
+        // consistent padding in both portrait and landscape + small app icon
+        title: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            children: [
+              _brandIcon(context),
+              const SizedBox(width: 8),
+              Text(t.homeTitle),
+            ],
+          ),
         ),
         actions: [
           IconButton(
@@ -74,7 +71,7 @@ class HomePage extends StatelessWidget {
 
         final content = <Widget>[];
 
-        // permissions
+        // permission error (runtime permission missing)
         if (!app.hasMinimumLocationPermission) {
           content.add(_errorCard(context, Text(t.errNoLocationPermission),
               trailing: SizedBox(
@@ -85,6 +82,25 @@ class HomePage extends StatelessWidget {
                   child: Text(t.learnHow),
                 ),
               )));
+        }
+
+        // NEW: location services (GPS) OFF error (permission may be granted)
+        if (app.hasMinimumLocationPermission && !app.locationServicesOn) {
+          content.add(_errorCard(
+            context,
+            const Text(
+                'Location services are OFF. Turn them on to receive nearby offers.'),
+            trailing: SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: () async {
+                  await app.locService.openLocationSettings();
+                },
+                icon: const Icon(Icons.location_searching),
+                label: const Text('Open Location Settings'),
+              ),
+            ),
+          ));
         }
 
         if (app.needsAlwaysOnBanner) {
@@ -231,20 +247,12 @@ class HomePage extends StatelessWidget {
             ),
           ),
         );
-        content.add(const SizedBox(height: 80)); // leave space for emergency button
-
-        final list = ListView(padding: const EdgeInsets.all(16), children: content);
+        content.add(const SizedBox(height: 80)); // space for emergency button
 
         return Stack(
           children: [
-            // Pull to refresh (reloads warnings, errors, graphs, stats, connectivity, permissions)
-            RefreshIndicator(
-              onRefresh: () => context.read<AppState>().refreshAll(),
-              child: PrimaryScrollController(
-                controller: ScrollController(),
-                child: list,
-              ),
-            ),
+            // NOTE: if you added pull-to-refresh earlier, keep it wrapped here
+            ListView(padding: const EdgeInsets.all(16), children: content),
             // emergency button bottom-left
             Positioned(
               left: 16,
@@ -255,6 +263,33 @@ class HomePage extends StatelessWidget {
         );
       }),
     );
+  }
+
+  // small, theme-aware app icon that avoids black-square artifacts on light mode
+  Widget _brandIcon(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final img = Image.asset(
+      'assets/images/app_icon_new.png',
+      width: 22,
+      height: 22,
+      fit: BoxFit.contain,
+    );
+
+    if (isDark) return img;
+
+    // Invert the white PNG to black in light mode; respects alpha (no fill).
+    // (ColorFiltered: official Flutter widget for runtime color transforms)
+    // Docs: ColorFiltered; Blend modes behavior: see Image.colorBlendMode.
+    final inverted = ColorFiltered(
+      colorFilter: const ColorFilter.matrix(<double>[
+        -1, 0, 0, 0, 255, //
+        0, -1, 0, 0, 255, //
+        0, 0, -1, 0, 255, //
+        0, 0, 0, 1, 0, //
+      ]),
+      child: img,
+    );
+    return inverted;
   }
 
   Widget _availabilityCard(

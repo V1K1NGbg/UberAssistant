@@ -49,14 +49,17 @@ class _RideRequestSheetState extends State<RideRequestSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final isYes = widget.request.advice?.toLowerCase() == 'yes';
-    final theme = Theme.of(context);
     final t = AppLocalizations.of(context)!;
-    final title = isYes ? t.requestTitleRecommended : t.requestTitle;
+
+    final adviceRaw = widget.request.advice?.toLowerCase().trim();
+    final hasAdvice = adviceRaw == 'yes' || adviceRaw == 'no';
+    final isYes = adviceRaw == 'yes';
+
+    final title = hasAdvice && isYes ? t.requestTitleRecommended : t.requestTitle;
 
     return SafeArea(
       child: Material( // opaque to prevent underlying icons showing "on top"
-        color: theme.cardColor,
+        color: Theme.of(context).cardColor,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(K.corner)),
         clipBehavior: Clip.antiAlias,
         child: Padding(
@@ -71,23 +74,19 @@ class _RideRequestSheetState extends State<RideRequestSheet> {
               const SizedBox(height: 12),
               Row(
                 children: [
-                  Text(title, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
-                  if (isYes) ...[
+                  Text(title, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
+                  if (hasAdvice) ...[
                     const SizedBox(width: 10),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: K.successGreen.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(999),
-                        border: Border.all(color: K.successGreen.withOpacity(0.35)),
-                      ),
-                      child: const Text('Recommended', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-                    ),
+                    _advicePill(isYes),
                   ],
                   const Spacer(),
-                  Text(t.expiresIn(_remaining), style: theme.textTheme.labelLarge),
+                  Text(t.expiresIn(_remaining), style: Theme.of(context).textTheme.labelLarge),
                 ],
               ),
+              if (hasAdvice) ...[
+                const SizedBox(height: 8),
+                _adviceBanner(isYes),
+              ],
               const SizedBox(height: 12),
               _kv(
                 t.customer,
@@ -156,6 +155,42 @@ class _RideRequestSheetState extends State<RideRequestSheet> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _advicePill(bool yes) {
+    final color = yes ? K.successGreen : K.errorRed;
+    final text = yes ? 'Advice: YES' : 'Advice: NO';
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withOpacity(0.35)),
+      ),
+      child: Text(text, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+    );
+  }
+
+  Widget _adviceBanner(bool yes) {
+    final color = yes ? K.successGreen : K.errorRed;
+    final icon  = yes ? Icons.thumb_up_alt_rounded : Icons.thumb_down_alt_rounded;
+    final msg   = yes ? 'We recommend accepting this request.' : 'We recommend skipping this request.';
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withOpacity(0.25)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: color),
+          const SizedBox(width: 8),
+          Expanded(child: Text(msg, style: TextStyle(color: color, fontWeight: FontWeight.w600))),
+        ],
       ),
     );
   }

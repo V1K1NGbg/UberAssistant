@@ -27,7 +27,13 @@ class DailyStats {
   final double driveMinutes;
   final double breakMinutes;
   final int breakCount;
-  DailyStats(this.earnings, this.completedTrips, this.driveMinutes, this.breakMinutes, this.breakCount);
+  DailyStats(
+      this.earnings,
+      this.completedTrips,
+      this.driveMinutes,
+      this.breakMinutes,
+      this.breakCount,
+      );
 }
 
 class AppState extends ChangeNotifier {
@@ -38,6 +44,7 @@ class AppState extends ChangeNotifier {
   final LocationService _loc;
 
   AppState(this._data, this._notif, this._ws, this._perms, this._loc);
+
   // expose
   LocalDataService get dataService => _data;
   NotificationService get notifService => _notif;
@@ -64,6 +71,10 @@ class AppState extends ChangeNotifier {
   bool get isDriverSelected => driver != null;
   bool get hasMinimumLocationPermission => _perms.hasWhenInUsePermissionCache;
 
+  // Location services (GPS) state
+  bool locationServicesOn = true;
+  StreamSubscription<bool>? _locServiceSub;
+
   Map<String, Driver> drivers = {};
   Map<String, Customer> customers = {};
   CustomerRequest? pendingOffer;
@@ -79,7 +90,10 @@ class AppState extends ChangeNotifier {
 
   // connectivity/error
   String? lastError;
-  void setError(String? e) { lastError = e; notifyListeners(); }
+  void setError(String? e) {
+    lastError = e;
+    notifyListeners();
+  }
 
   StreamSubscription? _connSub;
   bool hasNetwork = true;
@@ -95,12 +109,12 @@ class AppState extends ChangeNotifier {
   Future<void> init() async {
     await _data.init();
 
-    language  = await _data.getLanguage();
+    language = await _data.getLanguage();
     themeMode = await _data.getThemeMode();
-    serverIp  = await _data.getServerIp(defaultValue: K.defaultServerIp);
-    driver    = await _data.getDriver();
+    serverIp = await _data.getServerIp(defaultValue: K.defaultServerIp);
+    driver = await _data.getDriver();
 
-    drivers   = await _data.loadDrivers();
+    drivers = await _data.loadDrivers();
     customers = await _data.loadCustomers();
 
     // goals
@@ -111,11 +125,38 @@ class AppState extends ChangeNotifier {
     goalBreakMinutes = g.$4;
     goalBreaks = g.$5;
 
-    _history  = await _data.loadTripHistory();
-    _breaks   = await _data.loadBreakSessions();
+    _history = await _data.loadTripHistory();
+    _breaks = await _data.loadBreakSessions();
     _motivationMessages = await _data.loadMotivationMessages();
 
     await _perms.refreshStatus();
+
+    // location services state + subscription
+    locationServicesOn = await _loc.isServiceEnabled();
+    _locServiceSub = _loc.onServiceStatusChanged().listen((on) async {
+      locationServicesOn = on;
+      if (!on && available) {
+        // Lost while online — force offline and alert
+        available = false;
+        _stopTimers();
+        try {
+          await _ws.deregister();
+        } catch (_) {}
+        await _notif.showAlert(
+          title: 'Location services are OFF',
+          body:
+          'Turn on Location Services (GPS) to stay online. Open settings to enable it.',
+        );
+        await _notif.stopOnlineService();
+        setError('Location services are OFF.');
+      } else {
+        if (lastError != null &&
+            lastError!.toLowerCase().contains('location services')) {
+          setError(null);
+        }
+      }
+      notifyListeners();
+    });
 
     // connectivity subscription + initial check (fix false "no wifi" on first open)
     _connSub = Connectivity().onConnectivityChanged.listen((_) async {
@@ -143,7 +184,9 @@ class AppState extends ChangeNotifier {
       );
       notifyListeners();
     };
-    _ws.onError = (err) { setError(err); };
+    _ws.onError = (err) {
+      setError(err);
+    };
     _ws.onDisconnected = () {
       // server closed or socket died: force offline
       if (available) {
@@ -173,7 +216,9 @@ class AppState extends ChangeNotifier {
       await _ws.deregister();
       await Future.delayed(const Duration(milliseconds: 150));
       final ok = await _connectIfAvailable();
-      if (ok) { await _registerWithCoords(); }
+      if (ok) {
+        await _registerWithCoords();
+      }
     }
   }
 
@@ -210,8 +255,21 @@ class AppState extends ChangeNotifier {
 
   /// called by the UI when toggling ON; returns false if we failed and reverted
   Future<bool> tryGoOnline() async {
-    if (!isDriverSelected) { setError('Select a driver first.'); return false; }
-    if (!_perms.hasWhenInUsePermissionCache) { setError('Location permission required.'); return false; }
+    if (!isDriverSelected) {
+      setError('Select a driver first.');
+      return false;
+    }
+    if (!_perms.hasWhenInUsePermissionCache) {
+      setError('Location permission required.');
+      return false;
+    }
+    if (!locationServicesOn) {
+      setError('Location services are OFF. Enable GPS to go online.');
+      return false;
+    }
+
+    // If we were on a break, close it now (if long enough)
+    _finishBreakIfAny();
 
     available = true;
     notifyListeners();
@@ -238,7 +296,9 @@ class AppState extends ChangeNotifier {
       available = false;
       notifyListeners();
       _stopTimers();
-      await _ws.deregister();
+      try {
+        await _ws.deregister();
+      } catch (_) {}
       await _notif.stopOnlineService();
       return;
     }
@@ -262,9 +322,10 @@ class AppState extends ChangeNotifier {
   // === timers / telemetry ===
   void _startTimers() {
     _telemetryTimer?.cancel();
-    _telemetryTimer = Timer.periodic(const Duration(seconds: K.wsPingSeconds), (_) async {
-      await _sendTelemetryUpdate();
-    });
+    _telemetryTimer =
+        Timer.periodic(const Duration(seconds: K.wsPingSeconds), (_) async {
+          await _sendTelemetryUpdate();
+        });
     _watchdogTimer?.cancel();
     _watchdogTimer = Timer.periodic(const Duration(seconds: 5), (_) {
       if (!available) return;
@@ -295,18 +356,44 @@ class AppState extends ChangeNotifier {
 
   Future<void> _sendTelemetryUpdate() async {
     await _perms.refreshStatus();
+
+    // permission revoked mid-session — stop & alert
     if (!_perms.hasWhenInUsePermissionCache) {
-      // permission revoked mid-session — stop & alert
       if (available) {
         available = false;
         _stopTimers();
-        await _ws.deregister();
+        try {
+          await _ws.deregister();
+        } catch (_) {}
         await _notif.showAlert(
           title: 'Location permission lost',
-          body: 'The app cannot function without location. Open settings to enable it.',
+          body:
+          'The app cannot function without location permission. Open settings to enable it.',
         );
         await _notif.stopOnlineService();
         setError('Location permission revoked.');
+        notifyListeners();
+      }
+      return;
+    }
+
+    // services disabled mid-session — stop & alert
+    final servicesOn = await _loc.isServiceEnabled();
+    locationServicesOn = servicesOn;
+    if (!servicesOn) {
+      if (available) {
+        available = false;
+        _stopTimers();
+        try {
+          await _ws.deregister();
+        } catch (_) {}
+        await _notif.showAlert(
+          title: 'Location services are OFF',
+          body:
+          'Turn on Location Services (GPS) to continue. Open settings to enable it.',
+        );
+        await _notif.stopOnlineService();
+        setError('Location services are OFF.');
         notifyListeners();
       }
       return;
@@ -336,15 +423,26 @@ class AppState extends ChangeNotifier {
   }
 
   // === offer handling ===
-  void clearPendingOffer() { pendingOffer = null; notifyListeners(); }
+  void clearPendingOffer() {
+    pendingOffer = null;
+    notifyListeners();
+  }
 
   Future<void> acceptOffer(CustomerRequest req) async {
     clearPendingOffer();
 
     if (activeTrip == null) {
-      activeTrip = Trip.fromRequest(req, DateTime.now(), Duration(minutes: req.durationMins.round()));
+      activeTrip = Trip.fromRequest(
+        req,
+        DateTime.now(),
+        Duration(minutes: req.durationMins.round()),
+      );
     } else if (queuedTrip == null) {
-      queuedTrip = Trip.fromRequest(req, DateTime.now(), Duration(minutes: req.durationMins.round()));
+      queuedTrip = Trip.fromRequest(
+        req,
+        DateTime.now(),
+        Duration(minutes: req.durationMins.round()),
+      );
     }
     notifyListeners();
 
@@ -370,16 +468,20 @@ class AppState extends ChangeNotifier {
     );
     // store as canceled "trip-like" record for history (no end)
     final now = DateTime.now();
-    _history.add(TripRecord(
-      customerId: req.customerId,
-      customerName: customers[req.customerId]?.name,
-      customerRating: customers[req.customerId]?.rating,
-      from: req.from, to: req.to,
-      start: now, end: now,
-      durationMinutes: 0,
-      price: 0,
-      status: TripStatus.canceled,
-    ));
+    _history.add(
+      TripRecord(
+        customerId: req.customerId,
+        customerName: customers[req.customerId]?.name,
+        customerRating: customers[req.customerId]?.rating,
+        from: req.from,
+        to: req.to,
+        start: now,
+        end: now,
+        durationMinutes: 0,
+        price: 0,
+        status: TripStatus.canceled,
+      ),
+    );
     await _data.saveTripHistory(_history);
     notifyListeners();
   }
@@ -400,16 +502,20 @@ class AppState extends ChangeNotifier {
     // store record
     final t = activeTrip!;
     final durMins = t.duration.inSeconds / 60.0;
-    _history.add(TripRecord(
-      customerId: t.request.customerId,
-      customerName: customers[t.request.customerId]?.name,
-      customerRating: customers[t.request.customerId]?.rating,
-      from: t.from, to: t.to,
-      start: t.start, end: t.completedAt ?? DateTime.now(),
-      durationMinutes: durMins,
-      price: t.request.price,
-      status: TripStatus.completed,
-    ));
+    _history.add(
+      TripRecord(
+        customerId: t.request.customerId,
+        customerName: customers[t.request.customerId]?.name,
+        customerRating: customers[t.request.customerId]?.rating,
+        from: t.from,
+        to: t.to,
+        start: t.start,
+        end: t.completedAt ?? DateTime.now(),
+        durationMinutes: durMins,
+        price: t.request.price,
+        status: TripStatus.completed,
+      ),
+    );
     await _data.saveTripHistory(_history);
 
     // add for motivation
@@ -437,7 +543,8 @@ class AppState extends ChangeNotifier {
 
       final pos2 = await _loc.getPositionOrNull();
       await _ws.sendUpdate(
-        lat: pos2?.lat, lon: pos2?.lon,
+        lat: pos2?.lat,
+        lon: pos2?.lon,
         restMinutes: _computeRestMinutes(),
       );
       _lastTelemetrySentAt = DateTime.now();
@@ -451,16 +558,20 @@ class AppState extends ChangeNotifier {
     if (queuedTrip != null) {
       // record as canceled
       final q = queuedTrip!;
-      _history.add(TripRecord(
-        customerId: q.request.customerId,
-        customerName: customers[q.request.customerId]?.name,
-        customerRating: customers[q.request.customerId]?.rating,
-        from: q.from, to: q.to,
-        start: q.start, end: DateTime.now(),
-        durationMinutes: 0,
-        price: 0,
-        status: TripStatus.canceled,
-      ));
+      _history.add(
+        TripRecord(
+          customerId: q.request.customerId,
+          customerName: customers[q.request.customerId]?.name,
+          customerRating: customers[q.request.customerId]?.rating,
+          from: q.from,
+          to: q.to,
+          start: q.start,
+          end: DateTime.now(),
+          durationMinutes: 0,
+          price: 0,
+          status: TripStatus.canceled,
+        ),
+      );
       await _data.saveTripHistory(_history);
     }
     queuedTrip = null;
@@ -512,12 +623,13 @@ class AppState extends ChangeNotifier {
   }
 
   /// returns ordered map of Date->(driveMin, breakMin)
-  Map<DateTime, (double,double)> timeSeriesLastDays(int days) {
+  Map<DateTime, (double, double)> timeSeriesLastDays(int days) {
     final now = DateTime.now();
-    final map = <DateTime,(double,double)>{};
-    for (int i=days-1;i>=0;i--) {
-      final d = DateTime(now.year, now.month, now.day).subtract(Duration(days: i));
-      map[d] = (0,0);
+    final map = <DateTime, (double, double)>{};
+    for (int i = days - 1; i >= 0; i--) {
+      final d =
+      DateTime(now.year, now.month, now.day).subtract(Duration(days: i));
+      map[d] = (0, 0);
     }
 
     for (final h in _history) {
@@ -540,9 +652,10 @@ class AppState extends ChangeNotifier {
   /// returns ordered map of Date->earnings
   Map<DateTime, double> earningsSeriesLastDays(int days) {
     final now = DateTime.now();
-    final map = <DateTime,double>{};
-    for (int i=days-1;i>=0;i--) {
-      final d = DateTime(now.year, now.month, now.day).subtract(Duration(days: i));
+    final map = <DateTime, double>{};
+    for (int i = days - 1; i >= 0; i--) {
+      final d =
+      DateTime(now.year, now.month, now.day).subtract(Duration(days: i));
       map[d] = 0;
     }
     for (final h in _history) {
@@ -556,7 +669,7 @@ class AppState extends ChangeNotifier {
 
   String shortDayLabel(DateTime d) {
     final w = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    return w[d.weekday-1];
+    return w[d.weekday - 1];
   }
 
   List<TripRecord> historyForRange(dynamic range) {
@@ -564,12 +677,15 @@ class AppState extends ChangeNotifier {
     late DateTime start;
     switch (range) {
       case dynamic _ when range.toString().contains('today'):
-        start = DateTime(now.year, now.month, now.day); break;
+        start = DateTime(now.year, now.month, now.day);
+        break;
       case dynamic _ when range.toString().contains('week'):
-        final monday = now.subtract(Duration(days: (now.weekday-1)));
-        start = DateTime(monday.year, monday.month, monday.day); break;
+        final monday = now.subtract(Duration(days: (now.weekday - 1)));
+        start = DateTime(monday.year, monday.month, monday.day);
+        break;
       case dynamic _ when range.toString().contains('month'):
-        start = DateTime(now.year, now.month, 1); break;
+        start = DateTime(now.year, now.month, 1);
+        break;
       default:
         start = DateTime(now.year, 1, 1);
     }
@@ -577,11 +693,15 @@ class AppState extends ChangeNotifier {
   }
 
   // motivation helpers
-  void clearMotivation() { motivationalMessage = null; notifyListeners(); }
+  void clearMotivation() {
+    motivationalMessage = null;
+    notifyListeners();
+  }
 
-  // refreshes cached permission status and notifies listeners
+  // refreshes cached permission + service status and notifies listeners
   Future<void> refreshPermissions() async {
     await _perms.refreshStatus();
+    locationServicesOn = await _loc.isServiceEnabled();
     notifyListeners();
   }
 
@@ -596,9 +716,15 @@ class AppState extends ChangeNotifier {
   Future<void> wipeAppData() async {
     available = false;
     _stopTimers();
-    try { await _ws.deregister(); } catch (_) {}
-    try { await _ws.disconnect(); } catch (_) {}
-    try { await _notif.stopOnlineService(); } catch (_) {}
+    try {
+      await _ws.deregister();
+    } catch (_) {}
+    try {
+      await _ws.disconnect();
+    } catch (_) {}
+    try {
+      await _notif.stopOnlineService();
+    } catch (_) {}
 
     await _data.clearAll();
 
@@ -607,9 +733,9 @@ class AppState extends ChangeNotifier {
     _lastDropoffAt = null;
     activeTrip = null;
     queuedTrip = null;
-    _history.clear();
-    _breaks.clear();
-    _motivationMessages.clear();
+    _history = [];
+    _breaks = [];
+    _motivationMessages = [];
     _accumulatedMinutesForMotivation = 0;
 
     notifyListeners();
@@ -640,8 +766,8 @@ class AppState extends ChangeNotifier {
 
   // Called after seeding to refresh local caches immediately (no app restart)
   Future<void> reloadLocalCaches() async {
-    _history  = await _data.loadTripHistory();
-    _breaks   = await _data.loadBreakSessions();
+    _history = await _data.loadTripHistory();
+    _breaks = await _data.loadBreakSessions();
     notifyListeners();
   }
 
@@ -664,6 +790,7 @@ class AppState extends ChangeNotifier {
     _connSub?.cancel();
     _telemetryTimer?.cancel();
     _watchdogTimer?.cancel();
+    _locServiceSub?.cancel();
     super.dispose();
   }
 }
