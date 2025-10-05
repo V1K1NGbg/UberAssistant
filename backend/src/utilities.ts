@@ -5,7 +5,7 @@ import path from 'path';
 
 export function timeDelay(): number {
   // return 1000 * 60
-  return 20
+  return 30
 }
 // Haversine distance in kilometers
 function haversineDistance(
