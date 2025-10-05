@@ -17,6 +17,11 @@ import 'pages/onboarding.dart';
 import 'pages/settings_page.dart';
 import 'pages/privacy_page.dart';
 import 'pages/about_page.dart';
+import 'providers/app_state.dart';
+import 'services/local_data_service.dart';
+import 'services/notification_service.dart';
+import 'services/websocket_service.dart';
+import 'widgets/time_starter.dart';
 import 'pages/location_permission_help.dart';
 import 'pages/history_page.dart';
 import 'pages/heatmap.dart';
@@ -90,7 +95,11 @@ class UberAssistantApp extends StatelessWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
       routes: {
-        '/': (_) => needsSetup ? const OnboardingPage() : const HomePage(),
+        '/': (_) => TimerManager(
+          child: needsSetup
+              ? const OnboardingPage()
+              : const HomePage(),
+        ),
         '/home': (_) => const HomePage(),
         '/settings': (_) => const SettingsPage(),
         '/privacy': (_) => const PrivacyPage(),
