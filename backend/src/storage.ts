@@ -29,6 +29,7 @@ export interface Driver {
     driver_id: string;
     driver_name: string;
     driver_rating: number;
+    driver_gender: string;
 }
 
 export interface DriverStatus {

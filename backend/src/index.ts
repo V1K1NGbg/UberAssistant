@@ -1,7 +1,8 @@
 import express, { Request, Response } from 'express';
-import http from 'http';
+import http, { get } from 'http';
 import WebSocket from 'ws';
 import StorageManager, { Customer, CustomerRequest, Driver, DriverStatus } from './storage';
+import { getAdvice, timeDelay } from './utilities';
 
 const app = express();
 const PORT = 3000;
@@ -20,6 +21,52 @@ interface WebSocketMessage {
 
 // Initialize storage manager
 const storageManager = new StorageManager();
+
+// Store monitor connections
+const monitors = new Set<WebSocket>();
+
+// Track earnings per driver
+const driverEarnings = new Map<string, number>();
+
+// Function to update and display driver earnings
+function updateDriverEarnings(driverId: string, amount: number): void {
+    const currentEarnings = driverEarnings.get(driverId) || 0;
+    const newEarnings = currentEarnings + amount;
+    driverEarnings.set(driverId, newEarnings);
+    
+    console.log(`\n=== EARNINGS UPDATE ===`);
+    console.log(`Driver ${driverId} earned $${amount.toFixed(2)}`);
+    console.log(`Driver ${driverId} total earnings: $${newEarnings.toFixed(2)}`);
+    
+    // Display all driver earnings
+    console.log(`\n--- All Driver Earnings ---`);
+    let totalEarnings = 0;
+    let driverCount = 0;
+    
+    driverEarnings.forEach((earnings, id) => {
+        console.log(`Driver ${id}: $${earnings.toFixed(2)}`);
+        totalEarnings += earnings;
+        driverCount++;
+    });
+    
+    if (driverCount > 0) {
+        const avgEarnings = totalEarnings / driverCount;
+        console.log(`\nTotal Drivers: ${driverCount}`);
+        console.log(`Total Earnings: $${totalEarnings.toFixed(2)}`);
+        console.log(`Average Earnings per Driver: $${avgEarnings.toFixed(2)}`);
+    }
+    console.log(`========================\n`);
+}
+
+// Broadcast event to all monitors
+function broadcastToMonitors(event: any): void {
+    const message = JSON.stringify(event);
+    monitors.forEach(monitor => {
+        if (monitor.readyState === WebSocket.OPEN) {
+            monitor.send(message);
+        }
+    });
+}
 
 // Store pending requests waiting for driver responses
 const pendingRequests = new Map<string, {
@@ -57,18 +104,15 @@ function getDriversSortedByDistance(request: CustomerRequest): Array<{ driverId:
             request.from_location.lon,
             driver.location.lat,
             driver.location.lon
-        )
+        ) * (storageManager.getDriver(driver.driver_id)?.driver_gender === 'female' ? 0.8 : 1.0) // 20% distance reduction
     }));
 
     return driversWithDistance.sort((a, b) => a.distance - b.distance);
 }
 
-// Placeholder function for getting advice on whether to accept the request
-// TODO: Implement the actual advice logic
+// Function to get advice for a specific driver and request
 function getAdviceForRequest(request: CustomerRequest, driver: DriverStatus): string {
-    // This function will take in a request and a driver and return a string "yes"/"no" for advice
-    // Placeholder implementation - always returns "yes" for now
-    return "yes";
+    return getAdvice(driver, request);
 }
 
 // Function to send request to driver via WebSocket
@@ -79,11 +123,16 @@ function sendRequestToDriver(driverId: string, request: CustomerRequest): boolea
     }
 
     try {
-        ws.send(JSON.stringify({
+        const event = {
             type: 'ride_request',
             driverId: driverId,
             request: request,
-        }));
+        };
+        ws.send(JSON.stringify(event));
+        
+        // Broadcast to monitors
+        broadcastToMonitors(event);
+        
         return true;
     } catch (error) {
         console.error(`Error sending request to driver ${driverId}:`, error);
@@ -113,6 +162,14 @@ function tryNextDriver(customerId: string): void {
     if (!nextDriver) {
         console.log(`No more available drivers for customer ${customerId}`);
         pendingRequests.delete(customerId);
+        // pendingRequests.set(customerId, {
+        //     request: pending.request,
+        //     triedDrivers: [],
+        //     sortedDrivers: sortedDrivers
+        // });
+        // setTimeout(() => {
+        //     tryNextDriver(customerId);
+        // }, 60000); // 1 minute delay
         return;
     }
 
@@ -135,11 +192,11 @@ function tryNextDriver(customerId: string): void {
         triedDrivers.push(nextDriver.driverId);
         pending.currentDriverId = nextDriver.driverId;
         
-        // Set a 20-second timeout for driver response
+        // Set a 25-second timeout for driver response
         pending.timeoutId = setTimeout(() => {
-            console.log(`Driver ${nextDriver.driverId} did not respond within 20 seconds. Moving to next driver...`);
+            console.log(`Driver ${nextDriver.driverId} did not respond within 25 seconds. Moving to next driver...`);
             tryNextDriver(customerId);
-        }, 20000); // 20 seconds
+        }, 25 * timeDelay()); // 25 seconds
         
         console.log(`Sent request from customer ${customerId} to driver ${nextDriver.driverId} (distance: ${nextDriver.distance.toFixed(2)}km, advice: ${request.advice})`);
     } else {
@@ -182,14 +239,6 @@ app.post('/api/customer_request', (req: Request, res: Response) => {
     // Get all drivers sorted by distance
     const sortedDrivers = getDriversSortedByDistance(customerRequest);
 
-    if (sortedDrivers.length === 0) {
-        res.status(404).json({
-            success: false,
-            message: 'No active drivers available'
-        });
-        return;
-    }
-
     // Store the pending request
     pendingRequests.set(customerRequest.customer_id, {
         request: customerRequest,
@@ -229,15 +278,50 @@ app.get('/api/customers', (req: Request, res: Response) => {
     });
 });
 
+// Get earnings statistics
+app.get('/api/earnings', (req: Request, res: Response) => {
+    const earningsData: Array<{ driverId: string; earnings: number }> = [];
+    let totalEarnings = 0;
+    
+    driverEarnings.forEach((earnings, driverId) => {
+        earningsData.push({ driverId, earnings });
+        totalEarnings += earnings;
+    });
+    
+    const driverCount = earningsData.length;
+    const avgEarnings = driverCount > 0 ? totalEarnings / driverCount : 0;
+    
+    res.json({
+        success: true,
+        data: {
+            drivers: earningsData,
+            statistics: {
+                totalDrivers: driverCount,
+                totalEarnings: totalEarnings,
+                averageEarnings: avgEarnings
+            }
+        }
+    });
+});
+
 // WebSocket connection handler
 wss.on('connection', (ws: WebSocket) => {
     let driverId: string;
+    let isMonitor = false;
 
-    console.log('Driver connected');
+    console.log('Client connected');
 
     ws.on('message', (message: WebSocket.Data) => {
         try {
             const data: WebSocketMessage = JSON.parse(message.toString());
+
+            // Handle monitor registration
+            if (data.type === 'monitor') {
+                isMonitor = true;
+                monitors.add(ws);
+                console.log('Monitor client connected');
+                return;
+            }
 
             // Handle driver registration
             if (data.type === 'register' && data.driverId) {
@@ -251,6 +335,14 @@ wss.on('connection', (ws: WebSocket) => {
                         restTime: data.restTime
                     });
                     console.log(`Driver ${driverId} location/status updated`);
+                    
+                    // Broadcast to monitors
+                    broadcastToMonitors({
+                        type: 'register',
+                        driverId: driverId,
+                        location: data.location,
+                        restTime: data.restTime
+                    });
                 } else {
                     console.log(`Driver ${driverId} location/status update failed`);
                     console.log(data)
@@ -262,6 +354,12 @@ wss.on('connection', (ws: WebSocket) => {
                 driverId = data.driverId;
                 storageManager.deleteActiveConnection(driverId);
                 console.log(`Driver ${driverId} deregistered`);
+                
+                // Broadcast to monitors
+                broadcastToMonitors({
+                    type: 'deregister',
+                    driverId: driverId
+                });
             }
 
             // Save/update driver location and rest time
@@ -273,6 +371,14 @@ wss.on('connection', (ws: WebSocket) => {
                         restTime: data.restTime
                     });
                     console.log(`Driver ${driverId} location/status updated`);
+                    
+                    // Broadcast to monitors
+                    broadcastToMonitors({
+                        type: 'update',
+                        driverId: driverId,
+                        location: data.location,
+                        restTime: data.restTime
+                    });
                 } else {
                     console.log(`Driver ${driverId} location/status update failed`);
                     console.log(data)
@@ -293,6 +399,14 @@ wss.on('connection', (ws: WebSocket) => {
                     
                     console.log(`Driver ${driverId} denied request from customer ${customerId}. Trying next driver...`);
                     
+                    // Broadcast to monitors
+                    broadcastToMonitors({
+                        type: 'response',
+                        driverId: driverId,
+                        customerId: customerId,
+                        response: 'deny'
+                    });
+                    
                     // Try the next closest driver
                     tryNextDriver(customerId);
                 } else if (data.response === 'accept' && data.customerId) {
@@ -306,6 +420,20 @@ wss.on('connection', (ws: WebSocket) => {
                     }
                     
                     console.log(`Driver ${driverId} accepted request from customer ${customerId}`);
+                    
+                    // Update driver earnings
+                    if (pending?.request?.price) {
+                        updateDriverEarnings(driverId, pending.request.price);
+                    }
+                    
+                    // Broadcast to monitors (include request details for earnings tracking)
+                    broadcastToMonitors({
+                        type: 'response',
+                        driverId: driverId,
+                        customerId: customerId,
+                        response: 'accept',
+                        request: pending?.request
+                    });
                     
                     // Remove from pending requests
                     pendingRequests.delete(customerId);
@@ -328,8 +456,16 @@ wss.on('connection', (ws: WebSocket) => {
     });
 
     ws.on('close', () => {
-        if (driverId) {
+        if (isMonitor) {
+            monitors.delete(ws);
+            console.log('Monitor client disconnected');
+        } else if (driverId) {
             storageManager.deleteActiveConnection(driverId);
+            // Broadcast to monitors
+            broadcastToMonitors({
+                type: 'deregister',
+                driverId: driverId
+            });
             console.log(`Driver ${driverId} deregistered and disconnected`);
         } else {
             console.log('Client disconnected');

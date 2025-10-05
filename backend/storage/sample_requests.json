@@ -1,0 +1,752 @@
+[
+  {
+    "customer_id": "C3000",
+    "from_location": {
+      "lat": 52.09319,
+      "lon": 5.17695,
+      "address": "100 Main St, New York, NY 10000"
+    },
+    "to_location": {
+      "lat": 52.08017,
+      "lon": 5.16125,
+      "address": "113 Park Ave, Amsterdam 10007"
+    },
+    "price": 17.54,
+    "duration_mins": 20
+  },
+  {
+    "customer_id": "C3001",
+    "from_location": {
+      "lat": 51.41972,
+      "lon": 5.50334,
+      "address": "126 Broadway, Rotterdam 10014"
+    },
+    "to_location": {
+      "lat": 51.46578,
+      "lon": 5.5221,
+      "address": "139 Oak St, Utrecht 10021"
+    },
+    "price": 8.48,
+    "duration_mins": 12
+  },
+  {
+    "customer_id": "C3002",
+    "from_location": {
+      "lat": 52.05469,
+      "lon": 5.119,
+      "address": "152 Maple Ave, Eindhoven 10028"
+    },
+    "to_location": {
+      "lat": 52.10705,
+      "lon": 5.13061,
+      "address": "165 Elm St, The Hague 10035"
+    },
+    "price": 12.87,
+    "duration_mins": 26
+  },
+  {
+    "customer_id": "C3003",
+    "from_location": {
+      "lat": 51.94535,
+      "lon": 4.51494,
+      "address": "178 Washington St, New York, NY 10042"
+    },
+    "to_location": {
+      "lat": 51.90919,
+      "lon": 4.45792,
+      "address": "191 Central Ave, Amsterdam 10049"
+    },
+    "price": 17.96,
+    "duration_mins": 26
+  },
+  {
+    "customer_id": "C3004",
+    "from_location": {
+      "lat": 52.1056,
+      "lon": 5.13254,
+      "address": "204 Market St, Rotterdam 10056"
+    },
+    "to_location": {
+      "lat": 52.05785,
+      "lon": 5.06818,
+      "address": "217 River Rd, Utrecht 10063"
+    },
+    "price": 17.15,
+    "duration_mins": 31
+  },
+  {
+    "customer_id": "C3005",
+    "from_location": {
+      "lat": 52.36298,
+      "lon": 4.90663,
+      "address": "230 Main St, Eindhoven 10070"
+    },
+    "to_location": {
+      "lat": 52.33967,
+      "lon": 4.84363,
+      "address": "243 Park Ave, The Hague 10077"
+    },
+    "price": 11.55,
+    "duration_mins": 12
+  },
+  {
+    "customer_id": "C3006",
+    "from_location": {
+      "lat": 51.40426,
+      "lon": 5.44594,
+      "address": "256 Broadway, New York, NY 10084"
+    },
+    "to_location": {
+      "lat": 51.47999,
+      "lon": 5.45092,
+      "address": "269 Oak St, Amsterdam 10091"
+    },
+    "price": 8.37,
+    "duration_mins": 12
+  },
+  {
+    "customer_id": "C3007",
+    "from_location": {
+      "lat": 51.95784,
+      "lon": 4.51581,
+      "address": "282 Maple Ave, Rotterdam 10098"
+    },
+    "to_location": {
+      "lat": 51.90016,
+      "lon": 4.49205,
+      "address": "295 Elm St, Utrecht 10105"
+    },
+    "price": 12.99,
+    "duration_mins": 25
+  },
+  {
+    "customer_id": "C3008",
+    "from_location": {
+      "lat": 52.38348,
+      "lon": 4.8606,
+      "address": "308 Washington St, Eindhoven 10112"
+    },
+    "to_location": {
+      "lat": 52.33935,
+      "lon": 4.84197,
+      "address": "321 Central Ave, The Hague 10119"
+    },
+    "price": 6.03,
+    "duration_mins": 10
+  },
+  {
+    "customer_id": "C3009",
+    "from_location": {
+      "lat": 51.95763,
+      "lon": 4.51981,
+      "address": "334 Market St, New York, NY 10126"
+    },
+    "to_location": {
+      "lat": 51.91335,
+      "lon": 4.45377,
+      "address": "347 River Rd, Amsterdam 10133"
+    },
+    "price": 11.56,
+    "duration_mins": 15
+  },
+  {
+    "customer_id": "C3010",
+    "from_location": {
+      "lat": 52.07719,
+      "lon": 4.28746,
+      "address": "360 Main St, Rotterdam 10140"
+    },
+    "to_location": {
+      "lat": 52.05223,
+      "lon": 4.32063,
+      "address": "373 Park Ave, Utrecht 10147"
+    },
+    "price": 12.61,
+    "duration_mins": 21
+  },
+  {
+    "customer_id": "C3011",
+    "from_location": {
+      "lat": 52.04473,
+      "lon": 4.29302,
+      "address": "386 Broadway, Eindhoven 10154"
+    },
+    "to_location": {
+      "lat": 52.05596,
+      "lon": 4.32588,
+      "address": "399 Oak St, The Hague 10161"
+    },
+    "price": 6.19,
+    "duration_mins": 33
+  },
+  {
+    "customer_id": "C3012",
+    "from_location": {
+      "lat": 52.34498,
+      "lon": 4.84592,
+      "address": "412 Maple Ave, New York, NY 10168"
+    },
+    "to_location": {
+      "lat": 52.38706,
+      "lon": 4.85387,
+      "address": "425 Elm St, Amsterdam 10175"
+    },
+    "price": 18.06,
+    "duration_mins": 32
+  },
+  {
+    "customer_id": "C3013",
+    "from_location": {
+      "lat": 52.11078,
+      "lon": 5.13259,
+      "address": "438 Washington St, Rotterdam 10182"
+    },
+    "to_location": {
+      "lat": 52.1072,
+      "lon": 5.13543,
+      "address": "451 Central Ave, Utrecht 10189"
+    },
+    "price": 19.69,
+    "duration_mins": 32
+  },
+  {
+    "customer_id": "C3014",
+    "from_location": {
+      "lat": 51.48256,
+      "lon": 5.45089,
+      "address": "464 Market St, Eindhoven 10196"
+    },
+    "to_location": {
+      "lat": 51.41812,
+      "lon": 5.50513,
+      "address": "477 River Rd, The Hague 10203"
+    },
+    "price": 14.08,
+    "duration_mins": 33
+  },
+  {
+    "customer_id": "C3015",
+    "from_location": {
+      "lat": 51.40649,
+      "lon": 5.45487,
+      "address": "490 Main St, New York, NY 10210"
+    },
+    "to_location": {
+      "lat": 51.40833,
+      "lon": 5.44349,
+      "address": "503 Park Ave, Amsterdam 10217"
+    },
+    "price": 17.5,
+    "duration_mins": 23
+  },
+  {
+    "customer_id": "C3016",
+    "from_location": {
+      "lat": 52.3397,
+      "lon": 4.84998,
+      "address": "516 Broadway, Rotterdam 10224"
+    },
+    "to_location": {
+      "lat": 52.36684,
+      "lon": 4.93222,
+      "address": "529 Oak St, Utrecht 10231"
+    },
+    "price": 2.82,
+    "duration_mins": 31
+  },
+  {
+    "customer_id": "C3017",
+    "from_location": {
+      "lat": 52.06058,
+      "lon": 5.07112,
+      "address": "542 Maple Ave, Eindhoven 10238"
+    },
+    "to_location": {
+      "lat": 52.10687,
+      "lon": 5.1383,
+      "address": "555 Elm St, The Hague 10245"
+    },
+    "price": 14.29,
+    "duration_mins": 19
+  },
+  {
+    "customer_id": "C3018",
+    "from_location": {
+      "lat": 51.95846,
+      "lon": 4.52482,
+      "address": "568 Washington St, New York, NY 10252"
+    },
+    "to_location": {
+      "lat": 51.88518,
+      "lon": 4.43505,
+      "address": "581 Central Ave, Amsterdam 10259"
+    },
+    "price": 17.03,
+    "duration_mins": 34
+  },
+  {
+    "customer_id": "C3019",
+    "from_location": {
+      "lat": 52.05715,
+      "lon": 5.12198,
+      "address": "594 Market St, Rotterdam 10266"
+    },
+    "to_location": {
+      "lat": 52.0601,
+      "lon": 5.07344,
+      "address": "607 River Rd, Utrecht 10273"
+    },
+    "price": 11.4,
+    "duration_mins": 28
+  },
+  {
+    "customer_id": "C3020",
+    "from_location": {
+      "lat": 52.3853,
+      "lon": 4.8602,
+      "address": "620 Main St, Eindhoven 10280"
+    },
+    "to_location": {
+      "lat": 52.35877,
+      "lon": 4.90065,
+      "address": "633 Park Ave, The Hague 10287"
+    },
+    "price": 10.81,
+    "duration_mins": 11
+  },
+  {
+    "customer_id": "C3021",
+    "from_location": {
+      "lat": 52.09194,
+      "lon": 4.30978,
+      "address": "646 Broadway, New York, NY 10294"
+    },
+    "to_location": {
+      "lat": 52.08941,
+      "lon": 4.24913,
+      "address": "659 Oak St, Amsterdam 10301"
+    },
+    "price": 42.41,
+    "duration_mins": 18
+  },
+  {
+    "customer_id": "C3022",
+    "from_location": {
+      "lat": 52.34462,
+      "lon": 4.84438,
+      "address": "672 Maple Ave, Rotterdam 10308"
+    },
+    "to_location": {
+      "lat": 52.36697,
+      "lon": 4.93133,
+      "address": "685 Elm St, Utrecht 10315"
+    },
+    "price": 9.4,
+    "duration_mins": 26
+  },
+  {
+    "customer_id": "C3023",
+    "from_location": {
+      "lat": 51.95855,
+      "lon": 4.51971,
+      "address": "698 Washington St, Eindhoven 10322"
+    },
+    "to_location": {
+      "lat": 51.9436,
+      "lon": 4.52049,
+      "address": "711 Central Ave, The Hague 10329"
+    },
+    "price": 14.17,
+    "duration_mins": 32
+  },
+  {
+    "customer_id": "C3024",
+    "from_location": {
+      "lat": 52.38321,
+      "lon": 4.85809,
+      "address": "724 Market St, New York, NY 10336"
+    },
+    "to_location": {
+      "lat": 52.34071,
+      "lon": 4.84148,
+      "address": "737 River Rd, Amsterdam 10343"
+    },
+    "price": 16.99,
+    "duration_mins": 37
+  },
+  {
+    "customer_id": "C3025",
+    "from_location": {
+      "lat": 51.9434,
+      "lon": 4.51788,
+      "address": "750 Main St, Rotterdam 10350"
+    },
+    "to_location": {
+      "lat": 51.94737,
+      "lon": 4.51849,
+      "address": "763 Park Ave, Utrecht 10357"
+    },
+    "price": 11.37,
+    "duration_mins": 39
+  },
+  {
+    "customer_id": "C3026",
+    "from_location": {
+      "lat": 52.03383,
+      "lon": 4.33594,
+      "address": "776 Broadway, Eindhoven 10364"
+    },
+    "to_location": {
+      "lat": 52.09367,
+      "lon": 4.31067,
+      "address": "789 Oak St, The Hague 10371"
+    },
+    "price": 28.34,
+    "duration_mins": 41
+  },
+  {
+    "customer_id": "C3027",
+    "from_location": {
+      "lat": 51.40771,
+      "lon": 5.45669,
+      "address": "802 Maple Ave, New York, NY 10378"
+    },
+    "to_location": {
+      "lat": 51.40854,
+      "lon": 5.44365,
+      "address": "815 Elm St, Amsterdam 10385"
+    },
+    "price": 11.11,
+    "duration_mins": 31
+  },
+  {
+    "customer_id": "C3028",
+    "from_location": {
+      "lat": 52.36623,
+      "lon": 4.92825,
+      "address": "828 Washington St, Rotterdam 10392"
+    },
+    "to_location": {
+      "lat": 52.38657,
+      "lon": 4.85667,
+      "address": "841 Central Ave, Utrecht 10399"
+    },
+    "price": 21.03,
+    "duration_mins": 20
+  },
+  {
+    "customer_id": "C3029",
+    "from_location": {
+      "lat": 52.09407,
+      "lon": 4.3076,
+      "address": "854 Market St, Eindhoven 10406"
+    },
+    "to_location": {
+      "lat": 52.09097,
+      "lon": 4.30425,
+      "address": "867 River Rd, The Hague 10413"
+    },
+    "price": 4.7,
+    "duration_mins": 31
+  },
+  {
+    "customer_id": "C3030",
+    "from_location": {
+      "lat": 52.05773,
+      "lon": 5.07175,
+      "address": "880 Main St, New York, NY 10420"
+    },
+    "to_location": {
+      "lat": 52.05315,
+      "lon": 5.12191,
+      "address": "893 Park Ave, Amsterdam 10427"
+    },
+    "price": 12.31,
+    "duration_mins": 38
+  },
+  {
+    "customer_id": "C3031",
+    "from_location": {
+      "lat": 51.91347,
+      "lon": 4.45455,
+      "address": "906 Broadway, Rotterdam 10434"
+    },
+    "to_location": {
+      "lat": 51.9587,
+      "lon": 4.52059,
+      "address": "919 Oak St, Utrecht 10441"
+    },
+    "price": 8,
+    "duration_mins": 10
+  },
+  {
+    "customer_id": "C3032",
+    "from_location": {
+      "lat": 52.34085,
+      "lon": 4.84816,
+      "address": "932 Maple Ave, Eindhoven 10448"
+    },
+    "to_location": {
+      "lat": 52.34006,
+      "lon": 4.84298,
+      "address": "945 Elm St, The Hague 10455"
+    },
+    "price": 9.12,
+    "duration_mins": 20
+  },
+  {
+    "customer_id": "C3033",
+    "from_location": {
+      "lat": 51.47954,
+      "lon": 5.4514,
+      "address": "958 Washington St, New York, NY 10462"
+    },
+    "to_location": {
+      "lat": 51.46183,
+      "lon": 5.51612,
+      "address": "971 Central Ave, Amsterdam 10469"
+    },
+    "price": 13.11,
+    "duration_mins": 38
+  },
+  {
+    "customer_id": "C3034",
+    "from_location": {
+      "lat": 52.33036,
+      "lon": 4.90335,
+      "address": "984 Market St, Rotterdam 10476"
+    },
+    "to_location": {
+      "lat": 52.36274,
+      "lon": 4.9017,
+      "address": "997 River Rd, Utrecht 10483"
+    },
+    "price": 18.3,
+    "duration_mins": 12
+  },
+  {
+    "customer_id": "C3035",
+    "from_location": {
+      "lat": 51.40943,
+      "lon": 5.44974,
+      "address": "110 Main St, Eindhoven 10490"
+    },
+    "to_location": {
+      "lat": 51.46641,
+      "lon": 5.51544,
+      "address": "123 Park Ave, The Hague 10497"
+    },
+    "price": 9.53,
+    "duration_mins": 29
+  },
+  {
+    "customer_id": "C3036",
+    "from_location": {
+      "lat": 52.10887,
+      "lon": 5.13809,
+      "address": "136 Broadway, New York, NY 10504"
+    },
+    "to_location": {
+      "lat": 52.09551,
+      "lon": 5.17871,
+      "address": "149 Oak St, Amsterdam 10511"
+    },
+    "price": 17.02,
+    "duration_mins": 9
+  },
+  {
+    "customer_id": "C3037",
+    "from_location": {
+      "lat": 52.08235,
+      "lon": 4.28554,
+      "address": "162 Maple Ave, Rotterdam 10518"
+    },
+    "to_location": {
+      "lat": 52.09643,
+      "lon": 4.30355,
+      "address": "175 Elm St, Utrecht 10525"
+    },
+    "price": 11.42,
+    "duration_mins": 11
+  },
+  {
+    "customer_id": "C3038",
+    "from_location": {
+      "lat": 51.46722,
+      "lon": 5.51603,
+      "address": "188 Washington St, Eindhoven 10532"
+    },
+    "to_location": {
+      "lat": 51.46507,
+      "lon": 5.51754,
+      "address": "201 Central Ave, The Hague 10539"
+    },
+    "price": 3.51,
+    "duration_mins": 31
+  },
+  {
+    "customer_id": "C3039",
+    "from_location": {
+      "lat": 52.34098,
+      "lon": 4.84301,
+      "address": "214 Market St, New York, NY 10546"
+    },
+    "to_location": {
+      "lat": 52.36238,
+      "lon": 4.9302,
+      "address": "227 River Rd, Amsterdam 10553"
+    },
+    "price": 9.71,
+    "duration_mins": 30
+  },
+  {
+    "customer_id": "C3040",
+    "from_location": {
+      "lat": 52.36704,
+      "lon": 4.93144,
+      "address": "240 Main St, Rotterdam 10560"
+    },
+    "to_location": {
+      "lat": 52.36133,
+      "lon": 4.90356,
+      "address": "253 Park Ave, Utrecht 10567"
+    },
+    "price": 3.54,
+    "duration_mins": 36
+  },
+  {
+    "customer_id": "C3041",
+    "from_location": {
+      "lat": 52.04403,
+      "lon": 4.29123,
+      "address": "266 Broadway, Eindhoven 10574"
+    },
+    "to_location": {
+      "lat": 52.02991,
+      "lon": 4.33542,
+      "address": "279 Oak St, The Hague 10581"
+    },
+    "price": 11.98,
+    "duration_mins": 8
+  },
+  {
+    "customer_id": "C3042",
+    "from_location": {
+      "lat": 51.46571,
+      "lon": 5.51625,
+      "address": "292 Maple Ave, New York, NY 10588"
+    },
+    "to_location": {
+      "lat": 51.40685,
+      "lon": 5.44141,
+      "address": "305 Elm St, Amsterdam 10595"
+    },
+    "price": 21.3,
+    "duration_mins": 37
+  },
+  {
+    "customer_id": "C3043",
+    "from_location": {
+      "lat": 52.0946,
+      "lon": 5.17167,
+      "address": "318 Washington St, Rotterdam 10602"
+    },
+    "to_location": {
+      "lat": 52.05461,
+      "lon": 5.12214,
+      "address": "331 Central Ave, Utrecht 10609"
+    },
+    "price": 5.89,
+    "duration_mins": 38
+  },
+  {
+    "customer_id": "C3044",
+    "from_location": {
+      "lat": 52.09336,
+      "lon": 4.30585,
+      "address": "344 Market St, Eindhoven 10616"
+    },
+    "to_location": {
+      "lat": 52.09313,
+      "lon": 4.30647,
+      "address": "357 River Rd, The Hague 10623"
+    },
+    "price": 19.36,
+    "duration_mins": 9
+  },
+  {
+    "customer_id": "C3045",
+    "from_location": {
+      "lat": 51.94315,
+      "lon": 4.51326,
+      "address": "370 Main St, New York, NY 10630"
+    },
+    "to_location": {
+      "lat": 51.95498,
+      "lon": 4.52236,
+      "address": "383 Park Ave, Amsterdam 10637"
+    },
+    "price": 11.56,
+    "duration_mins": 14
+  },
+  {
+    "customer_id": "C3046",
+    "from_location": {
+      "lat": 52.36295,
+      "lon": 4.92832,
+      "address": "396 Broadway, Rotterdam 10644"
+    },
+    "to_location": {
+      "lat": 52.34495,
+      "lon": 4.84732,
+      "address": "409 Oak St, Utrecht 10651"
+    },
+    "price": 7.47,
+    "duration_mins": 35
+  },
+  {
+    "customer_id": "C3047",
+    "from_location": {
+      "lat": 52.05392,
+      "lon": 5.11883,
+      "address": "422 Maple Ave, Eindhoven 10658"
+    },
+    "to_location": {
+      "lat": 52.0593,
+      "lon": 5.07507,
+      "address": "435 Elm St, The Hague 10665"
+    },
+    "price": 15.05,
+    "duration_mins": 9
+  },
+  {
+    "customer_id": "C3048",
+    "from_location": {
+      "lat": 52.08427,
+      "lon": 5.16124,
+      "address": "448 Washington St, New York, NY 10672"
+    },
+    "to_location": {
+      "lat": 52.09552,
+      "lon": 5.17885,
+      "address": "461 Central Ave, Amsterdam 10679"
+    },
+    "price": 9.42,
+    "duration_mins": 37
+  },
+  {
+    "customer_id": "C3049",
+    "from_location": {
+      "lat": 51.40916,
+      "lon": 5.45186,
+      "address": "474 Market St, Rotterdam 10686"
+    },
+    "to_location": {
+      "lat": 51.48114,
+      "lon": 5.449,
+      "address": "487 River Rd, Utrecht 10693"
+    },
+    "price": 5.74,
+    "duration_mins": 7
+  }
+]
