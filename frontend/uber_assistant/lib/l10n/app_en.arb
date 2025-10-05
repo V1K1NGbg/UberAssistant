@@ -105,5 +105,9 @@
   "motivationTitle": "Nice work!",
   "openDialerError": "Couldn't open dialer.",
   "seedMockTitle": "Load demo data",
-  "seedMockSubtitle": "Preload realistic history and breaks so you can explore reports right away."
+  "seedMockSubtitle": "Preload realistic history and breaks so you can explore reports right away.",
+
+  "goalsTitle": "Personal goals",
+  "setGoalsSubtitle": "Adjust your daily targets.",
+  "editGoals": "Edit goals"
 }

@@ -47,9 +47,6 @@ dependencies:
   h3_flutter: ^0.7.0
   csv: ^6.0.0
 
-  # charts
-  fl_chart: ^0.68.0
-
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -62,9 +59,9 @@ flutter:
     - assets/data/customers.json
     - assets/data/drivers.json
     - assets/images/app_icon.png
+    - assets/images/app_icon_new.png    # <-- added
     - assets/images/onboarding_1.png
     - assets/images/onboarding_2.png
     - assets/images/onboarding_3.png
     - assets/images/onboarding_4.png
     - assets/data/heatmap.csv
-    - assets/data/messages.json

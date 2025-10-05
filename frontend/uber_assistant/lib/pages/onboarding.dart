@@ -24,16 +24,30 @@ class _OnboardingPageState extends State<OnboardingPage> {
   bool _permOk = false;
   String? _selectedDriverId;
 
-  // new: toggle to seed mock data (default ON)
+  // toggle to seed mock data (default ON)
   bool _seedMockData = true;
+
+  // local goal sliders
+  double _gEarnings = K.dailyGoalEarnings;
+  double _gTrips = K.dailyGoalTrips.toDouble();
+  double _gDrive = K.dailyGoalDriveMinutes.toDouble();
+  double _gBreak = K.dailyGoalBreakMinutes.toDouble();
+  double _gBreaks = K.dailyGoalBreaks.toDouble();
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await context.read<AppState>().refreshPermissions();
+      final app = context.read<AppState>();
+      await app.refreshPermissions();
       setState(() {
-        _permOk = context.read<AppState>().hasMinimumLocationPermission;
+        _permOk = app.hasMinimumLocationPermission;
+        // init local goals from persisted/app state
+        _gEarnings = app.goalEarnings;
+        _gTrips = app.goalTrips.toDouble();
+        _gDrive = app.goalDriveMinutes.toDouble();
+        _gBreak = app.goalBreakMinutes.toDouble();
+        _gBreaks = app.goalBreaks.toDouble();
       });
     });
   }
@@ -60,9 +74,10 @@ class _OnboardingPageState extends State<OnboardingPage> {
                   _introSlide(t.onboardingTitle1, t.onboardingBody1, 'assets/images/onboarding_1.png'),
                   _introSlide(t.onboardingTitle2, t.onboardingBody2, 'assets/images/onboarding_2.png'),
                   _introSlide(t.onboardingTitle3, t.onboardingBody3, 'assets/images/onboarding_3.png'),
-                  _permissionsStep(context, t, app),
-                  _driverPickStep(context, app),
-                  _allSet(context, t, 'assets/images/onboarding_4.png'),
+                  _permissionsStep(context, t, app),              // 3
+                  _goalsStep(context),                            // 4 (NEW)
+                  _driverPickStep(context, app),                  // 5
+                  _allSet(context, t, 'assets/images/onboarding_4.png'), // 6
                 ],
               ),
             ),
@@ -76,10 +91,10 @@ class _OnboardingPageState extends State<OnboardingPage> {
   Widget _navBar(BuildContext context, AppState app, AppLocalizations t) {
     // enable "Next" on driver step only when a driver is selected
     final canNext = switch (_ix) {
-      4 => _selectedDriverId != null,
+      5 => _selectedDriverId != null,
       _ => true,
     };
-    final last = _ix >= 5;
+    final last = _ix >= 6;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
@@ -107,6 +122,16 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 return;
               }
               if (_ix == 4) {
+                // save goals to app state
+                await app.setGoals(
+                  earnings: _gEarnings.roundToDouble(),
+                  trips: _gTrips.round(),
+                  driveMinutes: _gDrive.round(),
+                  breakMinutes: _gBreak.round(),
+                  breaks: _gBreaks.round(),
+                );
+              }
+              if (_ix == 5) {
                 // save driver selection
                 final id = _selectedDriverId!;
                 final d = app.drivers[id]!;
@@ -116,6 +141,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 // seed mock data if user kept the toggle ON (default)
                 if (_seedMockData) {
                   await MockSeed.seedIfEmpty(data: app.dataService, customers: app.customers);
+                  await app.reloadLocalCaches(); // reflect immediately
                 }
                 await app.setSeenOnboarding();
                 if (!mounted) return;
@@ -198,7 +224,6 @@ class _OnboardingPageState extends State<OnboardingPage> {
 
           if (showWarn) ...[
             const SizedBox(height: 12),
-            // orange rounded box: same “card” size as above, with a clear action inside
             _alwaysOnCard(context, t),
           ],
           const Spacer(),
@@ -208,7 +233,6 @@ class _OnboardingPageState extends State<OnboardingPage> {
   }
 
   Widget _alwaysOnCard(BuildContext context, AppLocalizations t) {
-    // RoundedCard with warm background; action inside the card (Material recommends cards for content + actions)
     return Container(
       decoration: BoxDecoration(
         color: K.warnOrange,
@@ -230,6 +254,88 @@ class _OnboardingPageState extends State<OnboardingPage> {
             child: Text(t.learnHow),
           ),
         ),
+      ]),
+    );
+  }
+
+  Widget _goalsStep(BuildContext context) {
+    TextStyle? label = Theme.of(context).textTheme.labelLarge;
+    Widget slider({
+      required String title,
+      required double value,
+      required double min,
+      required double max,
+      int? divisions,
+      required void Function(double) onChanged,
+      String Function(double)? fmt,
+    }) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: label),
+          Slider(
+            value: value,
+            min: min,
+            max: max,
+            divisions: divisions,
+            label: fmt == null ? value.round().toString() : fmt(value),
+            onChanged: onChanged,
+          ),
+        ],
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text('Personal goals', style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800)),
+        const SizedBox(height: 8),
+        Text('Adjust your daily targets to your preference.'),
+        const SizedBox(height: 16),
+
+        RoundedCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              slider(
+                title: 'Daily gains (€)',
+                value: _gEarnings,
+                min: 0, max: 200, divisions: 200,
+                onChanged: (v) => setState(() => _gEarnings = v),
+                fmt: (v) => '€${v.round()}',
+              ),
+              slider(
+                title: 'Completed trips',
+                value: _gTrips,
+                min: 0, max: 30, divisions: 30,
+                onChanged: (v) => setState(() => _gTrips = v),
+                fmt: (v) => '${v.round()}',
+              ),
+              slider(
+                title: 'Drive time (min)',
+                value: _gDrive,
+                min: 0, max: 600, divisions: 120,
+                onChanged: (v) => setState(() => _gDrive = v),
+                fmt: (v) => '${v.round()}',
+              ),
+              slider(
+                title: 'Break time (min)',
+                value: _gBreak,
+                min: 0, max: 240, divisions: 80,
+                onChanged: (v) => setState(() => _gBreak = v),
+                fmt: (v) => '${v.round()}',
+              ),
+              slider(
+                title: 'Breaks',
+                value: _gBreaks,
+                min: 0, max: 10, divisions: 10,
+                onChanged: (v) => setState(() => _gBreaks = v),
+                fmt: (v) => '${v.round()}',
+              ),
+            ],
+          ),
+        ),
+        const Spacer(),
       ]),
     );
   }
@@ -279,7 +385,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
         Text(t.allSetBody),
         const SizedBox(height: 12),
 
-        // new: toggle to seed mock/demo data
+        // toggle to seed mock/demo data
         RoundedCard(
           child: SwitchListTile.adaptive(
             contentPadding: EdgeInsets.zero,
@@ -308,7 +414,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
 
     if (status.isDenied || status.isRestricted || status.isPermanentlyDenied) {
       if (!mounted) return;
-      // explain that "Allow all the time" is in system settings (per Android docs)
+      // explain that "Allow all the time" is in system settings
       showModalBottomSheet(
         context: context,
         isScrollControlled: true,

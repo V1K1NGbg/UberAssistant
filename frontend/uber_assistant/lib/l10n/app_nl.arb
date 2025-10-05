@@ -105,5 +105,8 @@
   "motivationTitle": "Goed bezig!",
   "openDialerError": "Kon de telefoonapp niet openen.",
   "seedMockTitle": "Demogegevens laden",
-  "seedMockSubtitle": "Laad realistische geschiedenis en pauzes vooraf zodat je rapporten meteen kunt verkennen."
+  "seedMockSubtitle": "Laad realistische geschiedenis en pauzes vooraf zodat je rapporten meteen kunt verkennen.",
+  "goalsTitle": "Persoonlijke doelen",
+  "setGoalsSubtitle": "Stel je dagelijkse doelen in.",
+  "editGoals": "Doelen bewerken"
 }

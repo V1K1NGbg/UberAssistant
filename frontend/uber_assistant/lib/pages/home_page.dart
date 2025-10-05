@@ -16,10 +16,23 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context)!;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(t.homeTitle),
+        title: Row(
+          children: [
+            // App icon next to title; tint to black in light mode
+            Image.asset(
+              'assets/images/app_icon_new.png',
+              height: 24,
+              color: isDark ? null : Colors.black,
+              colorBlendMode: isDark ? null : BlendMode.srcIn,
+            ),
+            const SizedBox(width: 8),
+            Text(t.homeTitle),
+          ],
+        ),
         actions: [
           IconButton(
               icon: const Icon(Icons.bar_chart_outlined),
@@ -110,7 +123,7 @@ class HomePage extends StatelessWidget {
           content.add(
             RoundedCard(
               child:
-                  Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 const Icon(Icons.wifi_off),
                 const SizedBox(width: 12),
                 Expanded(child: Text(t.errNoInternet)),
@@ -218,12 +231,20 @@ class HomePage extends StatelessWidget {
             ),
           ),
         );
-        content.add(
-            const SizedBox(height: 80)); // leave space for emergency button
+        content.add(const SizedBox(height: 80)); // leave space for emergency button
+
+        final list = ListView(padding: const EdgeInsets.all(16), children: content);
 
         return Stack(
           children: [
-            ListView(padding: const EdgeInsets.all(16), children: content),
+            // Pull to refresh (reloads warnings, errors, graphs, stats, connectivity, permissions)
+            RefreshIndicator(
+              onRefresh: () => context.read<AppState>().refreshAll(),
+              child: PrimaryScrollController(
+                controller: ScrollController(),
+                child: list,
+              ),
+            ),
             // emergency button bottom-left
             Positioned(
               left: 16,
@@ -243,7 +264,7 @@ class HomePage extends StatelessWidget {
         children: [
           Expanded(
             child:
-                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(app.available ? t.available : t.unavailable,
                   style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 6),
@@ -255,18 +276,18 @@ class HomePage extends StatelessWidget {
             onChanged: app.driver == null
                 ? null
                 : (v) async {
-                    // if turning on and any known connection error happens, force back off
-                    if (v) {
-                      final ok = await app.tryGoOnline();
-                      if (!ok && context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                            content: Text(
-                                'Could not go online. Check server IP / network.')));
-                      }
-                    } else {
-                      await app.setAvailable(false);
-                    }
-                  },
+              // if turning on and any known connection error happens, force back off
+              if (v) {
+                final ok = await app.tryGoOnline();
+                if (!ok && context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                      content: Text(
+                          'Could not go online. Check server IP / network.')));
+                }
+              } else {
+                await app.setAvailable(false);
+              }
+            },
           ),
         ],
       ),
@@ -280,7 +301,7 @@ class HomePage extends StatelessWidget {
         children: [
           Text(title,
               style:
-                  const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           const SizedBox(height: 6),
           Text(subtitle),
           const SizedBox(height: 8),

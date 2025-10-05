@@ -11,10 +11,8 @@ class AnalyticsGraphs extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final app = context.watch<AppState>();
-    final tm = app.timeSeriesLastDays(7); // {date: (drive, break)}
+    final tm = app.timeSeriesLastDays(7);  // {date: (drive, break)}
     final er = app.earningsSeriesLastDays(14); // {date: earnings}
-
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Column(
       children: [
@@ -67,9 +65,13 @@ class AnalyticsGraphs extends StatelessWidget {
               const SizedBox(height: 8),
               Builder(
                 builder: (_) {
-                  // verdict based on average break ratio
+                  // verdict based on average break ratio, but only if enough data
                   double totalBreak = 0, totalOnline = 0;
                   for (final v in tm.values) { totalBreak += v.$2; totalOnline += (v.$1 + v.$2); }
+                  if (totalOnline < 60) {
+                    // not enough data (less than 60 minutes total)
+                    return const SizedBox.shrink();
+                  }
                   final ratio = totalOnline == 0 ? 0 : totalBreak / totalOnline;
                   final good = ratio >= 0.167; // ~45m / 4.5h
                   return Text(
@@ -94,6 +96,7 @@ class AnalyticsGraphs extends StatelessWidget {
                 height: 220,
                 child: LineChart(
                   LineChartData(
+                    minY: 0, // never go under x-axis
                     gridData: FlGridData(show: true, drawVerticalLine: false),
                     titlesData: FlTitlesData(
                       leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: true, reservedSize: 36)),
@@ -113,7 +116,7 @@ class AnalyticsGraphs extends StatelessWidget {
                     lineBarsData: [
                       LineChartBarData(
                         spots: List.generate(er.length, (i) => FlSpot(i.toDouble(), er.values.elementAt(i))),
-                        isCurved: true,
+                        isCurved: false, // avoid overshoot under 0
                         dotData: FlDotData(show: true),
                         color: K.progressBlue,
                         barWidth: 3,

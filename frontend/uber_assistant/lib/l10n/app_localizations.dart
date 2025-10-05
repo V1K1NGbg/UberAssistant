@@ -733,6 +733,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Preload realistic history and breaks so you can explore reports right away.'**
   String get seedMockSubtitle;
+
+  /// No description provided for @goalsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal goals'**
+  String get goalsTitle;
+
+  /// No description provided for @setGoalsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjust your daily targets.'**
+  String get setGoalsSubtitle;
+
+  /// No description provided for @editGoals.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit goals'**
+  String get editGoals;
 }
 
 class _AppLocalizationsDelegate

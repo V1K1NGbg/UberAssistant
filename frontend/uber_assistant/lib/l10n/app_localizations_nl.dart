@@ -348,4 +348,13 @@ class AppLocalizationsNl extends AppLocalizations {
   @override
   String get seedMockSubtitle =>
       'Laad realistische geschiedenis en pauzes vooraf zodat je rapporten meteen kunt verkennen.';
+
+  @override
+  String get goalsTitle => 'Persoonlijke doelen';
+
+  @override
+  String get setGoalsSubtitle => 'Stel je dagelijkse doelen in.';
+
+  @override
+  String get editGoals => 'Doelen bewerken';
 }

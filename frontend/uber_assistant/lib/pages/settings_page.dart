@@ -7,6 +7,11 @@ import '../widgets/rating_stars.dart';
 import '../constants.dart';
 import '../main.dart';
 
+import '../services/local_data_service.dart';
+import '../services/notification_service.dart';
+import '../services/websocket_service.dart';
+import '../services/permission_service.dart';
+import '../services/location_service.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -145,7 +150,7 @@ class SettingsPage extends StatelessWidget {
 
           const Divider(height: 32),
 
-          // 🔴 wipe app data
+          // wipe app data
           ListTile(
             title: Text(t.wipeData, style: TextStyle(color: Theme.of(context).colorScheme.error)),
             trailing: Icon(Icons.delete_forever, color: Theme.of(context).colorScheme.error),
@@ -165,25 +170,27 @@ class SettingsPage extends StatelessWidget {
                   ],
                 ),
               );
-              // inside SettingsPage onTap for wipeData
+
               if (ok == true) {
                 await app.wipeAppData();
+
                 if (context.mounted) {
-                  // 🔧 rebuild provider state so main.dart will rebuild to onboarding
-                  final newApp = AppState(
-                    app.dataService,
-                    app.notifService,
-                    app.wsService,
-                    app.permsService,
-                    app.locService,
-                  );
+                  // fresh services & state (avoid reusing old instances)
+                  final data = LocalDataService();
+                  final notif = NotificationService();
+                  final ws = WebSocketService();
+                  final perms = PermissionService();
+                  final loc = LocationService();
+
+                  final newApp = AppState(data, notif, ws, perms, loc);
+                  await notif.init();
                   await newApp.init();
 
                   Navigator.of(context).pushAndRemoveUntil(
                     MaterialPageRoute(
-                      builder: (_) => ChangeNotifierProvider.value(
+                      builder: (_) => ChangeNotifierProvider<AppState>.value(
                         value: newApp,
-                        child: UberAssistantApp(),
+                        child: const UberAssistantApp(),
                       ),
                     ),
                         (_) => false,

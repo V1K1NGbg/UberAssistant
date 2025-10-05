@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../constants.dart';
 
-/// Bottom-left red square that reveals an expanding call panel
-/// The white/dark panel animates UP from under the red button,
-/// and its background continues under the red button (panel is drawn behind it).
+/// Red square that reveals a call panel which grows/shrinks
+/// from *under* the red button. The panel's background extends
+/// beneath the red button; on collapse it disappears *into* it.
 class EmergencyButton extends StatefulWidget {
   const EmergencyButton({super.key});
 
@@ -12,11 +12,35 @@ class EmergencyButton extends StatefulWidget {
   State<EmergencyButton> createState() => _EmergencyButtonState();
 }
 
-class _EmergencyButtonState extends State<EmergencyButton> {
+class _EmergencyButtonState extends State<EmergencyButton> with SingleTickerProviderStateMixin {
+  late final AnimationController _ctl;
+  late final Animation<double> _size;
+  late final Animation<double> _fade;
+
   bool _expanded = false;
 
+  // layout tuning
   static const double _corner = 14;
-  static const double _panelHeight = 68; // height of the revealed call panel
+  static const double _panelHeight = 84;   // visible area above the red button
+  static const double _underlap    = 12;   // part that continues under the red button
+
+  @override
+  void initState() {
+    super.initState();
+    _ctl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 260),
+      reverseDuration: const Duration(milliseconds: 220),
+    );
+    _size = CurvedAnimation(parent: _ctl, curve: Curves.easeOutCubic, reverseCurve: Curves.easeInCubic);
+    _fade = CurvedAnimation(parent: _ctl, curve: Curves.easeOut, reverseCurve: Curves.easeIn);
+  }
+
+  @override
+  void dispose() {
+    _ctl.dispose();
+    super.dispose();
+  }
 
   Future<void> _openDialer() async {
     final uri = Uri(scheme: 'tel', path: K.emergencyNumber);
@@ -31,73 +55,90 @@ class _EmergencyButtonState extends State<EmergencyButton> {
     await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 
-  void _toggle() => setState(() => _expanded = !_expanded);
+  void _toggle() {
+    setState(() => _expanded = !_expanded);
+    if (_expanded) {
+      _ctl.forward();
+    } else {
+      _ctl.reverse();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final panelColor = theme.colorScheme.surface;        // light/dark aware
-    final textColor  = theme.colorScheme.onSurface;
+    final scheme    = Theme.of(context).colorScheme;
+    final panelBg   = scheme.surface;
+    final panelText = scheme.onSurface;
 
-    // total height allows the panel to expand above the red button
+    // reserve enough space so we never overflow while animating
     return SizedBox(
       width: K.emergencyButtonSize,
-      height: K.emergencyButtonSize + _panelHeight,
+      height: K.emergencyButtonSize + _panelHeight + 8,
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          // --- EXPANDING CALL PANEL (behind the red button) ---
+          // ---------------- PANEL (behind the red button) ----------------
+          // Bottom is set so the panel extends UNDER the red button by [_underlap].
           Positioned(
             left: 0,
-            bottom: 0, // panel grows upward from the bottom edge (under the red button)
+            bottom: K.emergencyButtonSize - _underlap,
             child: IgnorePointer(
-              ignoring: !_expanded,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 240),
-                curve: Curves.easeOutCubic,
-                width: K.emergencyButtonSize,
-                height: _expanded ? _panelHeight : 0,
-                decoration: BoxDecoration(
-                  color: panelColor,
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(_corner),
-                    topRight: Radius.circular(_corner),
-                  ),
-                  boxShadow: [
-                    // subtle lift; still visible in dark mode
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.24),
-                      blurRadius: 8,
-                      offset: const Offset(0, -2),
-                    ),
-                  ],
-                ),
-                // fade in content as it expands
-                child: AnimatedOpacity(
-                  duration: const Duration(milliseconds: 180),
-                  opacity: _expanded ? 1 : 0,
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
+              ignoring: !_expanded && _ctl.isDismissed,
+              child: FadeTransition(
+                opacity: _fade,
+                child: SizeTransition(
+                  sizeFactor: _size,
+                  axis: Axis.vertical,
+                  axisAlignment: 1.0, // anchor to bottom → grows/shrinks upward into the red button
+                  child: Container(
+                    width: K.emergencyButtonSize,
+                    height: _panelHeight + _underlap, // includes the portion that sits under the red button
+                    decoration: BoxDecoration(
+                      color: panelBg,
                       borderRadius: const BorderRadius.only(
                         topLeft: Radius.circular(_corner),
                         topRight: Radius.circular(_corner),
                       ),
-                      onTap: _openDialer,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.phone_in_talk_rounded, size: 26, color: textColor),
-                          const SizedBox(height: 6),
-                          Text(
-                            K.emergencyNumber,
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                              color: textColor,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.24),
+                          blurRadius: 10,
+                          offset: const Offset(0, -3),
+                        ),
+                      ],
+                    ),
+                    padding: EdgeInsets.only(
+                      left: 12,
+                      right: 12,
+                      // keep content above the overlapped zone + give it some breathing room
+                      bottom: _underlap + 10,
+                      top: 12,
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(_corner),
+                          topRight: Radius.circular(_corner),
+                        ),
+                        onTap: _openDialer,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            // 112 ABOVE the icon
+                            Text(
+                              K.emergencyNumber,
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w800,
+                                color: panelText,
+                                letterSpacing: 0.2,
+                              ),
                             ),
-                          ),
-                        ],
+                            const SizedBox(height: 6),
+                            Icon(Icons.phone_in_talk_rounded, size: 28, color: panelText),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -106,7 +147,7 @@ class _EmergencyButtonState extends State<EmergencyButton> {
             ),
           ),
 
-          // --- RED EMERGENCY BUTTON (on top) ---
+          // ---------------- RED BUTTON (on top) ----------------
           Positioned(
             left: 0,
             bottom: 0,

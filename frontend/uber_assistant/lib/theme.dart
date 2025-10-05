@@ -20,7 +20,7 @@ ThemeData buildLightTheme() {
       foregroundColor: K.uberBlack,
       elevation: 0,
       centerTitle: false,
-      titleSpacing: 0, // keep title flush-left also in landscape
+      titleSpacing: 16, // consistent padding in portrait & landscape
     ),
     cardTheme: const CardThemeData(
       color: Colors.white,
@@ -58,7 +58,7 @@ ThemeData buildDarkTheme() {
       foregroundColor: Colors.white,
       elevation: 0,
       centerTitle: false,
-      titleSpacing: 0,
+      titleSpacing: 16, // consistent padding
     ),
     cardTheme: const CardThemeData(
       color: Color(0xFF121212),

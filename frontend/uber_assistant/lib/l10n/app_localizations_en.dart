@@ -346,4 +346,13 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get seedMockSubtitle =>
       'Preload realistic history and breaks so you can explore reports right away.';
+
+  @override
+  String get goalsTitle => 'Personal goals';
+
+  @override
+  String get setGoalsSubtitle => 'Adjust your daily targets.';
+
+  @override
+  String get editGoals => 'Edit goals';
 }

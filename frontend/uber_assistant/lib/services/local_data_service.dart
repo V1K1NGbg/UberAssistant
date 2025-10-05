@@ -109,6 +109,30 @@ class LocalDataService {
     await _prefs.setString('breakSessions', raw);
   }
 
+  // === goals persistence ===
+  Future<void> setGoals({
+    double? earnings,
+    int? trips,
+    int? driveMinutes,
+    int? breakMinutes,
+    int? breaks,
+  }) async {
+    if (earnings != null) { await _prefs.setDouble('goalEarnings', earnings); }
+    if (trips != null) { await _prefs.setInt('goalTrips', trips); }
+    if (driveMinutes != null) { await _prefs.setInt('goalDriveMinutes', driveMinutes); }
+    if (breakMinutes != null) { await _prefs.setInt('goalBreakMinutes', breakMinutes); }
+    if (breaks != null) { await _prefs.setInt('goalBreaks', breaks); }
+  }
+
+  Future<(double earnings, int trips, int driveMinutes, int breakMinutes, int breaks)> getGoals() async {
+    final e = _prefs.getDouble('goalEarnings') ?? K.dailyGoalEarnings;
+    final t = _prefs.getInt('goalTrips') ?? K.dailyGoalTrips;
+    final dm = _prefs.getInt('goalDriveMinutes') ?? K.dailyGoalDriveMinutes;
+    final bm = _prefs.getInt('goalBreakMinutes') ?? K.dailyGoalBreakMinutes;
+    final b = _prefs.getInt('goalBreaks') ?? K.dailyGoalBreaks;
+    return (e, t, dm, bm, b);
+  }
+
   Future<void> clearAll() async {
     await _prefs.clear();
   }

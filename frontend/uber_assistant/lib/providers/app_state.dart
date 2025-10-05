@@ -51,6 +51,13 @@ class AppState extends ChangeNotifier {
   String serverIp = K.defaultServerIp;
   Driver? driver;
 
+  // personal goals (persisted)
+  double goalEarnings = K.dailyGoalEarnings;
+  int goalTrips = K.dailyGoalTrips;
+  int goalDriveMinutes = K.dailyGoalDriveMinutes;
+  int goalBreakMinutes = K.dailyGoalBreakMinutes;
+  int goalBreaks = K.dailyGoalBreaks;
+
   // runtime
   bool available = false;
   bool seenOnboarding = false;
@@ -96,24 +103,43 @@ class AppState extends ChangeNotifier {
     drivers   = await _data.loadDrivers();
     customers = await _data.loadCustomers();
 
+    // goals
+    final g = await _data.getGoals();
+    goalEarnings = g.$1;
+    goalTrips = g.$2;
+    goalDriveMinutes = g.$3;
+    goalBreakMinutes = g.$4;
+    goalBreaks = g.$5;
+
     _history  = await _data.loadTripHistory();
     _breaks   = await _data.loadBreakSessions();
     _motivationMessages = await _data.loadMotivationMessages();
 
     await _perms.refreshStatus();
 
+    // connectivity subscription + initial check (fix false "no wifi" on first open)
     _connSub = Connectivity().onConnectivityChanged.listen((_) async {
       final ok = await InternetConnection().hasInternetAccess;
       hasNetwork = ok;
-      if (!ok) setError('No internet connection detected.');
+      if (!ok) {
+        setError('No internet connection detected.');
+      } else {
+        if (lastError != null && lastError!.contains('internet')) {
+          setError(null);
+        }
+      }
       notifyListeners();
     });
+    // initial check now
+    hasNetwork = await InternetConnection().hasInternetAccess;
+    if (!hasNetwork) setError('No internet connection detected.');
+    notifyListeners();
 
     _ws.onOffer = (req) async {
       pendingOffer = req;
       await _notif.showOffer(
         title: 'New offer',
-        body: '${req.from.address ?? 'From'} → ${req.to.address ?? 'To'}',
+        body: '${req.from.address ?? 'From'} – ${req.to.address ?? 'To'}',
       );
       notifyListeners();
     };
@@ -170,6 +196,8 @@ class AppState extends ChangeNotifier {
     if (available) {
       try {
         await _ws.reconnect('ws://$serverIp:3000');
+        // ensure foreground/ongoing is active for the reconnected session
+        await _notif.startOnlineService();
         await _registerWithCoords();
       } catch (_) {
         setError('Could not reach server at $serverIp. Check IP in Settings.');
@@ -190,6 +218,8 @@ class AppState extends ChangeNotifier {
 
     final ok = await _connectIfAvailable();
     if (!ok) {
+      // failed: ensure any foreground/notification is not running
+      await _notif.stopOnlineService();
       available = false;
       notifyListeners();
       return false;
@@ -219,8 +249,9 @@ class AppState extends ChangeNotifier {
   Future<bool> _connectIfAvailable() async {
     if (!available || driver == null) return false;
     try {
-      await _notif.startOnlineService();
       await _ws.connect('ws://$serverIp:3000', driverId: driver!.id);
+      // only after successful connect start the foreground/ongoing notification
+      await _notif.startOnlineService();
       return true;
     } catch (_) {
       setError('Could not reach server at $serverIp. Check IP in Settings.');
@@ -274,6 +305,7 @@ class AppState extends ChangeNotifier {
           title: 'Location permission lost',
           body: 'The app cannot function without location. Open settings to enable it.',
         );
+        await _notif.stopOnlineService();
         setError('Location permission revoked.');
         notifyListeners();
       }
@@ -436,7 +468,6 @@ class AppState extends ChangeNotifier {
   }
 
   // === breaks (count only OFF periods >= min after being ON and before being ON again)
-  // called by UI when going back online; closes a break if existed
   void _finishBreakIfAny() async {
     if (_breakStartAt != null) {
       final end = DateTime.now();
@@ -582,6 +613,50 @@ class AppState extends ChangeNotifier {
     _accumulatedMinutesForMotivation = 0;
 
     notifyListeners();
+  }
+
+  // === goals API ===
+  Future<void> setGoals({
+    double? earnings,
+    int? trips,
+    int? driveMinutes,
+    int? breakMinutes,
+    int? breaks,
+  }) async {
+    if (earnings != null) goalEarnings = earnings;
+    if (trips != null) goalTrips = trips;
+    if (driveMinutes != null) goalDriveMinutes = driveMinutes;
+    if (breakMinutes != null) goalBreakMinutes = breakMinutes;
+    if (breaks != null) goalBreaks = breaks;
+    await _data.setGoals(
+      earnings: earnings,
+      trips: trips,
+      driveMinutes: driveMinutes,
+      breakMinutes: breakMinutes,
+      breaks: breaks,
+    );
+    notifyListeners();
+  }
+
+  // Called after seeding to refresh local caches immediately (no app restart)
+  Future<void> reloadLocalCaches() async {
+    _history  = await _data.loadTripHistory();
+    _breaks   = await _data.loadBreakSessions();
+    notifyListeners();
+  }
+
+  // Pull-to-refresh hook
+  Future<void> refreshAll() async {
+    await refreshPermissions();
+    hasNetwork = await InternetConnection().hasInternetAccess;
+    if (!hasNetwork) {
+      setError('No internet connection detected.');
+    } else {
+      if (lastError != null && lastError!.contains('internet')) {
+        setError(null);
+      }
+    }
+    await reloadLocalCaches();
   }
 
   @override

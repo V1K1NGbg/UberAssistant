@@ -80,8 +80,6 @@ class NotificationService {
   }
 
   /// Foreground service + an ongoing local notification.
-  /// Note: On Android 13+ and especially 14+, users can dismiss ongoing
-  /// foreground notifications; this is an OS-level behavior change. :contentReference[oaicite:1]{index=1}
   Future<void> startOnlineService() async {
     if (Platform.isAndroid) {
       fgt.FlutterForegroundTask.init(
@@ -92,7 +90,6 @@ class NotificationService {
           channelImportance: fgt.NotificationChannelImportance.LOW,
           priority: fgt.NotificationPriority.LOW,
           visibility: fgt.NotificationVisibility.VISIBILITY_PUBLIC,
-          // onlyAlertOnce: true,
         ),
         iosNotificationOptions: const fgt.IOSNotificationOptions(showNotification: false),
         foregroundTaskOptions: const fgt.ForegroundTaskOptions(interval: 5000),
@@ -103,7 +100,7 @@ class NotificationService {
         notificationText: 'Staying connected for offers',
       );
 
-      // Best-effort ongoing (pre-Android 14 this is non-dismissible).
+      // Ongoing notification while online
       await _plugin.show(
         _onlineNotifId,
         'Available',
@@ -113,9 +110,8 @@ class NotificationService {
             _channelIdOnline, 'Online Status',
             importance: Importance.low,
             priority: Priority.low,
-            ongoing: true,            // non-dismissible <= Android 13
+            ongoing: true,
             autoCancel: false,
-            // onlyAlertOnce: true,
             category: AndroidNotificationCategory.service,
             showWhen: false,
           ),
