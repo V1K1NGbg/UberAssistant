@@ -19,8 +19,9 @@ ThemeData buildLightTheme() {
       backgroundColor: Colors.white,
       foregroundColor: K.uberBlack,
       elevation: 0,
+      centerTitle: false,
+      titleSpacing: 16, // consistent padding in portrait & landscape
     ),
-    // ThemeData.cardTheme now expects CardThemeData
     cardTheme: const CardThemeData(
       color: Colors.white,
       shape: RoundedRectangleBorder(borderRadius: K.cardRadius),
@@ -56,6 +57,8 @@ ThemeData buildDarkTheme() {
       backgroundColor: K.uberEbony,
       foregroundColor: Colors.white,
       elevation: 0,
+      centerTitle: false,
+      titleSpacing: 16, // consistent padding
     ),
     cardTheme: const CardThemeData(
       color: Color(0xFF121212),

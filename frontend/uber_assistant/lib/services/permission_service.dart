@@ -1,20 +1,22 @@
+import 'dart:io';
 import 'package:permission_handler/permission_handler.dart';
 
 class PermissionService {
-  Future<PermissionStatus> requestLocation() async {
-    final status = await Permission.location.status;
-    if (status.isGranted) return status;
+  bool hasWhenInUsePermissionCache = false;
+  bool hasAlwaysPermissionCache = false;
 
-    final result = await Permission.location.request();
-    return result;
+  Future<void> refreshStatus() async {
+    final whenInUse = await Permission.location.status;
+    // On both Android/iOS, check the specific "Always" status
+    final always = await Permission.locationAlways.status;
+
+    hasWhenInUsePermissionCache = whenInUse.isGranted;
+    hasAlwaysPermissionCache = always.isGranted;
   }
 
-  Future<bool> isPermanentlyDenied() async {
-    return (await Permission.location.status).isPermanentlyDenied;
-  }
+  Future<PermissionStatus> requestWhenInUse() async => Permission.location.request();
 
-  /// Opens the OS app settings screen so the user can manually grant permission.
   Future<void> openAppSettingsScreen() async {
-    await openAppSettings();
+    await openAppSettings(); // opens app's settings page (plugin API)
   }
 }

@@ -98,113 +98,41 @@ abstract class AppLocalizations {
     Locale('nl')
   ];
 
-  /// No description provided for @appName.
-  ///
-  /// In en, this message translates to:
-  /// **'Uber Assistant'**
-  String get appName;
-
-  /// No description provided for @onboardingTitle1.
-  ///
-  /// In en, this message translates to:
-  /// **'Drive smarter'**
-  String get onboardingTitle1;
-
-  /// No description provided for @onboardingBody1.
-  ///
-  /// In en, this message translates to:
-  /// **'This app helps you decide when to accept a request, when to rest, and how to maximise earnings.'**
-  String get onboardingBody1;
-
-  /// No description provided for @onboardingTitle2.
-  ///
-  /// In en, this message translates to:
-  /// **'Real-time offers'**
-  String get onboardingTitle2;
-
-  /// No description provided for @onboardingBody2.
-  ///
-  /// In en, this message translates to:
-  /// **'Get timely offers with clear info: pickup, dropoff, duration, earnings and model advice.'**
-  String get onboardingBody2;
-
-  /// No description provided for @onboardingTitle3.
-  ///
-  /// In en, this message translates to:
-  /// **'Stay in control'**
-  String get onboardingTitle3;
-
-  /// No description provided for @onboardingBody3.
-  ///
-  /// In en, this message translates to:
-  /// **'Switch \"Available\" when you’re ready. We’ll keep you connected and notify you instantly.'**
-  String get onboardingBody3;
-
-  /// No description provided for @permTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Permissions we need'**
-  String get permTitle;
-
-  /// No description provided for @permBody.
-  ///
-  /// In en, this message translates to:
-  /// **'We use your location to connect you with nearby requests and to share status with the server.'**
-  String get permBody;
-
-  /// No description provided for @permAllow.
-  ///
-  /// In en, this message translates to:
-  /// **'Allow location'**
-  String get permAllow;
-
-  /// No description provided for @permDeniedTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Permission needed'**
-  String get permDeniedTitle;
-
-  /// No description provided for @permDeniedBody.
-  ///
-  /// In en, this message translates to:
-  /// **'This app can’t work without location. You can grant permission in Settings.'**
-  String get permDeniedBody;
-
-  /// No description provided for @openSettings.
-  ///
-  /// In en, this message translates to:
-  /// **'Open Settings'**
-  String get openSettings;
-
-  /// No description provided for @exitApp.
-  ///
-  /// In en, this message translates to:
-  /// **'Exit'**
-  String get exitApp;
-
-  /// No description provided for @allSetTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'You’re all set'**
-  String get allSetTitle;
-
-  /// No description provided for @allSetBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Switch to Available to start receiving offers.'**
-  String get allSetBody;
-
-  /// No description provided for @letsGo.
-  ///
-  /// In en, this message translates to:
-  /// **'Let’s go'**
-  String get letsGo;
-
   /// No description provided for @homeTitle.
   ///
   /// In en, this message translates to:
   /// **'Uber Assistant'**
   String get homeTitle;
+
+  /// No description provided for @settings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get settings;
+
+  /// No description provided for @about.
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get about;
+
+  /// No description provided for @privacy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get privacy;
+
+  /// No description provided for @privacyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'We process only the minimum data needed for the demo.'**
+  String get privacyBody;
+
+  /// No description provided for @aboutBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Hackathon demo to help earners make smarter choices.'**
+  String get aboutBody;
 
   /// No description provided for @available.
   ///
@@ -218,71 +146,95 @@ abstract class AppLocalizations {
   /// **'Taking a break'**
   String get unavailable;
 
-  /// No description provided for @toggleAvailable.
-  ///
-  /// In en, this message translates to:
-  /// **'Go online'**
-  String get toggleAvailable;
-
-  /// No description provided for @toggleUnavailable.
-  ///
-  /// In en, this message translates to:
-  /// **'Go offline'**
-  String get toggleUnavailable;
-
   /// No description provided for @statusWaiting.
   ///
   /// In en, this message translates to:
-  /// **'Waiting for a customer request…'**
+  /// **'Waiting for customer requests…'**
   String get statusWaiting;
 
   /// No description provided for @statusBreak.
   ///
   /// In en, this message translates to:
-  /// **'Turn the switch to Available to start receiving offers.'**
+  /// **'Turn the switch on when you are ready to receive requests.'**
   String get statusBreak;
 
   /// No description provided for @statusNothing.
   ///
   /// In en, this message translates to:
-  /// **'Nothing going on right now'**
+  /// **'Nothing going on currently'**
   String get statusNothing;
 
-  /// No description provided for @earningsLabel.
+  /// No description provided for @queued.
   ///
   /// In en, this message translates to:
-  /// **'Earnings'**
-  String get earningsLabel;
+  /// **'Queued next trip'**
+  String get queued;
 
-  /// No description provided for @durationLabel.
+  /// No description provided for @cancel.
   ///
   /// In en, this message translates to:
-  /// **'Duration'**
-  String get durationLabel;
+  /// **'Cancel'**
+  String get cancel;
 
-  /// No description provided for @mins.
+  /// No description provided for @ok.
   ///
   /// In en, this message translates to:
-  /// **'{mins} min'**
-  String mins(Object mins);
+  /// **'OK'**
+  String get ok;
 
-  /// No description provided for @adviceYes.
+  /// No description provided for @dismiss.
   ///
   /// In en, this message translates to:
-  /// **'Recommended'**
-  String get adviceYes;
+  /// **'Dismiss'**
+  String get dismiss;
 
-  /// No description provided for @adviceNo.
+  /// No description provided for @driver.
   ///
   /// In en, this message translates to:
-  /// **'Not recommended'**
-  String get adviceNo;
+  /// **'Driver'**
+  String get driver;
 
-  /// No description provided for @rating.
+  /// No description provided for @language.
   ///
   /// In en, this message translates to:
-  /// **'Rating'**
-  String get rating;
+  /// **'Language'**
+  String get language;
+
+  /// No description provided for @themeMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme'**
+  String get themeMode;
+
+  /// No description provided for @serverIp.
+  ///
+  /// In en, this message translates to:
+  /// **'Server IP'**
+  String get serverIp;
+
+  /// No description provided for @tripInTransit.
+  ///
+  /// In en, this message translates to:
+  /// **'In transit'**
+  String get tripInTransit;
+
+  /// No description provided for @imThere.
+  ///
+  /// In en, this message translates to:
+  /// **'I’m there'**
+  String get imThere;
+
+  /// No description provided for @requestTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New request'**
+  String get requestTitle;
+
+  /// No description provided for @requestTitleRecommended.
+  ///
+  /// In en, this message translates to:
+  /// **'Recommended request'**
+  String get requestTitleRecommended;
 
   /// No description provided for @customer.
   ///
@@ -302,143 +254,503 @@ abstract class AppLocalizations {
   /// **'Drop-off'**
   String get dropoff;
 
-  /// No description provided for @coords.
+  /// No description provided for @durationLabel.
   ///
   /// In en, this message translates to:
-  /// **'Coordinates'**
-  String get coords;
+  /// **'Duration'**
+  String get durationLabel;
 
-  /// No description provided for @accept.
+  /// No description provided for @earningsLabel.
   ///
   /// In en, this message translates to:
-  /// **'Accept'**
-  String get accept;
+  /// **'Earnings'**
+  String get earningsLabel;
 
   /// No description provided for @skip.
   ///
   /// In en, this message translates to:
-  /// **'Skip'**
+  /// **'Ignore'**
   String get skip;
+
+  /// No description provided for @accept.
+  ///
+  /// In en, this message translates to:
+  /// **'Slide to accept'**
+  String get accept;
+
+  /// No description provided for @mins.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} mins'**
+  String mins(Object minutes);
 
   /// No description provided for @expiresIn.
   ///
   /// In en, this message translates to:
-  /// **'Expires in {secs}s'**
-  String expiresIn(Object secs);
+  /// **'Expires in {seconds}s'**
+  String expiresIn(Object seconds);
 
-  /// No description provided for @requestTitle.
+  /// No description provided for @onboardingTitle1.
   ///
   /// In en, this message translates to:
-  /// **'New request'**
-  String get requestTitle;
+  /// **'Welcome'**
+  String get onboardingTitle1;
 
-  /// No description provided for @requestTitleRecommended.
+  /// No description provided for @onboardingBody1.
   ///
   /// In en, this message translates to:
-  /// **'Recommended request'**
-  String get requestTitleRecommended;
+  /// **'This app helps you earn smarter with timely offers and safe nudges.'**
+  String get onboardingBody1;
 
-  /// No description provided for @idMissing.
+  /// No description provided for @onboardingTitle2.
   ///
   /// In en, this message translates to:
-  /// **'Customer not found'**
-  String get idMissing;
+  /// **'Always on it'**
+  String get onboardingTitle2;
 
-  /// No description provided for @imThere.
+  /// No description provided for @onboardingBody2.
   ///
   /// In en, this message translates to:
-  /// **'I’m there'**
-  String get imThere;
+  /// **'We notify you when there’s a good request nearby.'**
+  String get onboardingBody2;
 
-  /// No description provided for @cancel.
+  /// No description provided for @onboardingTitle3.
   ///
   /// In en, this message translates to:
-  /// **'Cancel'**
-  String get cancel;
+  /// **'Balanced & safe'**
+  String get onboardingTitle3;
 
-  /// No description provided for @queued.
+  /// No description provided for @onboardingBody3.
   ///
   /// In en, this message translates to:
-  /// **'Queued'**
-  String get queued;
+  /// **'We nudge you to rest when needed and keep your data safe.'**
+  String get onboardingBody3;
 
-  /// No description provided for @tripInTransit.
+  /// No description provided for @permTitle.
   ///
   /// In en, this message translates to:
-  /// **'In transit'**
-  String get tripInTransit;
+  /// **'Permissions'**
+  String get permTitle;
 
-  /// No description provided for @arrived.
+  /// No description provided for @permBody.
   ///
   /// In en, this message translates to:
-  /// **'Location reached'**
-  String get arrived;
+  /// **'We need your location to find offers near you.'**
+  String get permBody;
 
-  /// No description provided for @settings.
+  /// No description provided for @permAllow.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow location'**
+  String get permAllow;
+
+  /// No description provided for @permAllowSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Grant location while using the app. You can upgrade to “Allow all the time” in Settings for background operation.'**
+  String get permAllowSubtitle;
+
+  /// No description provided for @permGranted.
+  ///
+  /// In en, this message translates to:
+  /// **'Location granted'**
+  String get permGranted;
+
+  /// No description provided for @checkAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Check again'**
+  String get checkAgain;
+
+  /// No description provided for @permDeniedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Permission required'**
+  String get permDeniedTitle;
+
+  /// No description provided for @permDeniedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The app can’t function without location. You can exit or grant the permission in Settings.'**
+  String get permDeniedBody;
+
+  /// No description provided for @exitApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Exit'**
+  String get exitApp;
+
+  /// No description provided for @openSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Settings'**
+  String get openSettings;
+
+  /// No description provided for @allSetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You’re all set!'**
+  String get allSetTitle;
+
+  /// No description provided for @allSetBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Let’s get ready and start receiving offers.'**
+  String get allSetBody;
+
+  /// No description provided for @letsGo.
+  ///
+  /// In en, this message translates to:
+  /// **'Let’s go!'**
+  String get letsGo;
+
+  /// No description provided for @next.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get next;
+
+  /// No description provided for @back.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get back;
+
+  /// No description provided for @selectDriver.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your driver'**
+  String get selectDriver;
+
+  /// No description provided for @selectDriverBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick your demo identity. You can change it later in Settings.'**
+  String get selectDriverBody;
+
+  /// No description provided for @permAlwaysBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'For background operation, allow location \"All the time\" in Settings.'**
+  String get permAlwaysBanner;
+
+  /// No description provided for @learnHow.
+  ///
+  /// In en, this message translates to:
+  /// **'How to fix'**
+  String get learnHow;
+
+  /// No description provided for @locationHelpTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable \"Allow all the time\"'**
+  String get locationHelpTitle;
+
+  /// No description provided for @locationHelpBody.
+  ///
+  /// In en, this message translates to:
+  /// **'To receive offers in the background, enable background location.'**
+  String get locationHelpBody;
+
+  /// No description provided for @locationHelpAndroid.
+  ///
+  /// In en, this message translates to:
+  /// **'Android: Open the app’s settings > Permissions > Location, then select \"Allow all the time\".'**
+  String get locationHelpAndroid;
+
+  /// No description provided for @locationHelpiOS.
+  ///
+  /// In en, this message translates to:
+  /// **'iOS: Settings > Privacy & Security > Location Services > Uber Assistant > Allow Location Access: Always.'**
+  String get locationHelpiOS;
+
+  /// No description provided for @errNoInternet.
+  ///
+  /// In en, this message translates to:
+  /// **'No internet connection detected. Please check Wi-Fi or mobile data.'**
+  String get errNoInternet;
+
+  /// No description provided for @errNoLocationPermission.
+  ///
+  /// In en, this message translates to:
+  /// **'The app currently is not functional because it has no location permission.'**
+  String get errNoLocationPermission;
+
+  /// No description provided for @wipeData.
+  ///
+  /// In en, this message translates to:
+  /// **'Wipe app data'**
+  String get wipeData;
+
+  /// No description provided for @wipeConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete all app data?'**
+  String get wipeConfirmTitle;
+
+  /// No description provided for @wipeConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This will remove saved language/theme, driver selection, server IP and any other stored preferences. The app will restart into setup.'**
+  String get wipeConfirmBody;
+
+  /// No description provided for @delete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get delete;
+
+  /// No description provided for @wipeDone.
+  ///
+  /// In en, this message translates to:
+  /// **'App data cleared.'**
+  String get wipeDone;
+
+  /// No description provided for @settingsTitle.
   ///
   /// In en, this message translates to:
   /// **'Settings'**
-  String get settings;
+  String get settingsTitle;
 
-  /// No description provided for @language.
+  /// No description provided for @settingsGeneral.
   ///
   /// In en, this message translates to:
-  /// **'Language'**
-  String get language;
+  /// **'General'**
+  String get settingsGeneral;
 
-  /// No description provided for @languageSystem.
+  /// No description provided for @langSystem.
   ///
   /// In en, this message translates to:
   /// **'System'**
-  String get languageSystem;
+  String get langSystem;
 
-  /// No description provided for @languageEnglish.
+  /// No description provided for @theme.
   ///
   /// In en, this message translates to:
-  /// **'English'**
-  String get languageEnglish;
+  /// **'Theme'**
+  String get theme;
 
-  /// No description provided for @languageDutch.
+  /// No description provided for @themeSystem.
   ///
   /// In en, this message translates to:
-  /// **'Nederlands'**
-  String get languageDutch;
+  /// **'System'**
+  String get themeSystem;
 
-  /// No description provided for @driver.
+  /// No description provided for @themeLight.
   ///
   /// In en, this message translates to:
-  /// **'Driver'**
-  String get driver;
+  /// **'Light'**
+  String get themeLight;
 
-  /// No description provided for @serverIp.
+  /// No description provided for @themeDark.
   ///
   /// In en, this message translates to:
-  /// **'Server IP'**
-  String get serverIp;
+  /// **'Dark'**
+  String get themeDark;
 
-  /// No description provided for @about.
+  /// No description provided for @edit.
   ///
   /// In en, this message translates to:
-  /// **'About'**
-  String get about;
+  /// **'Edit'**
+  String get edit;
 
-  /// No description provided for @privacy.
+  /// No description provided for @save.
   ///
   /// In en, this message translates to:
-  /// **'Privacy policy'**
-  String get privacy;
+  /// **'Save'**
+  String get save;
 
-  /// No description provided for @aboutBody.
+  /// No description provided for @none.
   ///
   /// In en, this message translates to:
-  /// **'Uber Assistant is a hackathon demo built to help earners make smarter, safer choices.'**
-  String get aboutBody;
+  /// **'None'**
+  String get none;
 
-  /// No description provided for @privacyBody.
+  /// No description provided for @dailyReport.
   ///
   /// In en, this message translates to:
-  /// **'This demo uses your location locally and sends it to your server over the LAN WebSocket.'**
-  String get privacyBody;
+  /// **'Daily report'**
+  String get dailyReport;
+
+  /// No description provided for @dailyGains.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily gains'**
+  String get dailyGains;
+
+  /// No description provided for @completedTrips.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed trips'**
+  String get completedTrips;
+
+  /// No description provided for @driveTimeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Drive time'**
+  String get driveTimeLabel;
+
+  /// No description provided for @breakTimeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Break time'**
+  String get breakTimeLabel;
+
+  /// No description provided for @breakCountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Breaks'**
+  String get breakCountLabel;
+
+  /// No description provided for @tripHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Trip history'**
+  String get tripHistory;
+
+  /// No description provided for @filter.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter'**
+  String get filter;
+
+  /// No description provided for @filterToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get filterToday;
+
+  /// No description provided for @filterWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'This week'**
+  String get filterWeek;
+
+  /// No description provided for @filterMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'This month'**
+  String get filterMonth;
+
+  /// No description provided for @filterYear.
+  ///
+  /// In en, this message translates to:
+  /// **'This year'**
+  String get filterYear;
+
+  /// No description provided for @sort.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort'**
+  String get sort;
+
+  /// No description provided for @sortEarningsHighLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Earnings high → low'**
+  String get sortEarningsHighLow;
+
+  /// No description provided for @sortEarningsLowHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'Earnings low → high'**
+  String get sortEarningsLowHigh;
+
+  /// No description provided for @sortCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed first'**
+  String get sortCompleted;
+
+  /// No description provided for @sortCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled first'**
+  String get sortCancelled;
+
+  /// No description provided for @status.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get status;
+
+  /// No description provided for @statusCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get statusCompleted;
+
+  /// No description provided for @statusCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get statusCancelled;
+
+  /// No description provided for @depart.
+  ///
+  /// In en, this message translates to:
+  /// **'Depart'**
+  String get depart;
+
+  /// No description provided for @arrive.
+  ///
+  /// In en, this message translates to:
+  /// **'Arrive'**
+  String get arrive;
+
+  /// No description provided for @details.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get details;
+
+  /// No description provided for @takeABreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Take a break'**
+  String get takeABreak;
+
+  /// No description provided for @motivationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Nice work!'**
+  String get motivationTitle;
+
+  /// No description provided for @openDialerError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open dialer.'**
+  String get openDialerError;
+
+  /// No description provided for @seedMockTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Load demo data'**
+  String get seedMockTitle;
+
+  /// No description provided for @seedMockSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Preload realistic history and breaks so you can explore reports right away.'**
+  String get seedMockSubtitle;
+
+  /// No description provided for @goalsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal goals'**
+  String get goalsTitle;
+
+  /// No description provided for @setGoalsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjust your daily targets.'**
+  String get setGoalsSubtitle;
+
+  /// No description provided for @editGoals.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit goals'**
+  String get editGoals;
 }
 
 class _AppLocalizationsDelegate

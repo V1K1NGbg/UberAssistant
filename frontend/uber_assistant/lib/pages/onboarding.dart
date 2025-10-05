@@ -1,11 +1,15 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:uber_assistant/l10n/app_localizations.dart';
-import '../constants.dart';
-import '../services/permission_service.dart';
-import '../providers/app_state.dart';
 import 'package:provider/provider.dart';
+import 'package:provider/provider.dart';
+import '../l10n/app_localizations.dart';
+import '../providers/app_state.dart';
+import '../widgets/rating_stars.dart';
+import '../widgets/rounded_card.dart';
+import '../constants.dart';
+import 'package:permission_handler/permission_handler.dart';
+// add seeder
+import '../dev/mock_seed.dart';
 
 class OnboardingPage extends StatefulWidget {
   const OnboardingPage({super.key});
@@ -16,15 +20,49 @@ class OnboardingPage extends StatefulWidget {
 
 class _OnboardingPageState extends State<OnboardingPage> {
   final _ctrl = PageController();
-  final _perm = PermissionService();
-
   int _ix = 0;
   bool _permOk = false;
+  String? _selectedDriverId;
+
+  // toggle to seed mock data (default ON)
+  bool _seedMockData = true;
+
+  // local goal sliders
+  double _gEarnings = K.dailyGoalEarnings;
+  double _gTrips = K.dailyGoalTrips.toDouble();
+  double _gDrive = K.dailyGoalDriveMinutes.toDouble();
+  double _gBreak = K.dailyGoalBreakMinutes.toDouble();
+  double _gBreaks = K.dailyGoalBreaks.toDouble();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final app = context.read<AppState>();
+      await app.refreshPermissions();
+      setState(() {
+        _permOk = app.hasMinimumLocationPermission;
+        // init local goals from persisted/app state
+        _gEarnings = app.goalEarnings;
+        _gTrips = app.goalTrips.toDouble();
+        _gDrive = app.goalDriveMinutes.toDouble();
+        _gBreak = app.goalBreakMinutes.toDouble();
+        _gBreaks = app.goalBreaks.toDouble();
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context)!;
+    final app = context.watch<AppState>();
+
+    // dark bg consistent with rest of app
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? const Color(0xFF0A0A0A) : Theme.of(context).scaffoldBackgroundColor;
+
     return Scaffold(
+      backgroundColor: bg,
       body: SafeArea(
         child: Column(
           children: [
@@ -33,163 +71,376 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 controller: _ctrl,
                 onPageChanged: (i) => setState(() => _ix = i),
                 children: [
-                  _illustrated(
-                    img: 'assets/images/onboarding_1.png',
-                    title: t.onboardingTitle1,
-                    body: t.onboardingBody1,
-                  ),
-                  _illustrated(
-                    img: 'assets/images/onboarding_2.png',
-                    title: t.onboardingTitle2,
-                    body: t.onboardingBody2,
-                  ),
-                  _illustrated(
-                    img: 'assets/images/onboarding_3.png',
-                    title: t.onboardingTitle3,
-                    body: t.onboardingBody3,
-                  ),
-                  _permissionsStep(context),
-                  _allSet(t),
+                  _introSlide(t.onboardingTitle1, t.onboardingBody1, 'assets/images/onboarding_1.png'),
+                  _introSlide(t.onboardingTitle2, t.onboardingBody2, 'assets/images/onboarding_2.png'),
+                  _introSlide(t.onboardingTitle3, t.onboardingBody3, 'assets/images/onboarding_3.png'),
+                  _permissionsStep(context, t, app),              // 3
+                  _goalsStep(context),                            // 4 (NEW)
+                  _driverPickStep(context, app),                  // 5
+                  _allSet(context, t, 'assets/images/onboarding_4.png'), // 6
                 ],
               ),
             ),
-            _navBar(context),
+            _navBar(context, app, t),
           ],
         ),
       ),
     );
   }
 
-  Widget _navBar(BuildContext context) {
-    final t = AppLocalizations.of(context)!;
+  Widget _navBar(BuildContext context, AppState app, AppLocalizations t) {
+    // enable "Next" on driver step only when a driver is selected
+    final canNext = switch (_ix) {
+      5 => _selectedDriverId != null,
+      _ => true,
+    };
+    final last = _ix >= 6;
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       child: Row(
         children: [
           if (_ix > 0)
             TextButton(
-              onPressed: () => _ctrl.previousPage(duration: const Duration(milliseconds: 250), curve: Curves.easeOut),
-              child: const Text('Back'),
+              onPressed: () => _ctrl.previousPage(duration: const Duration(milliseconds: 220), curve: Curves.easeOut),
+              child: Text(t.back),
             )
           else
             const SizedBox(width: 64),
           const Spacer(),
           TextButton(
-            onPressed: () async {
+            onPressed: !canNext
+                ? null
+                : () async {
               if (_ix == 3) {
-                await _requestPerms(context);
+                // permissions step: if already granted, go next; else prompt
+                if (_permOk) {
+                  _ctrl.nextPage(duration: const Duration(milliseconds: 220), curve: Curves.easeOut);
+                } else {
+                  await _handlePermissionFlow(context);
+                }
+                return;
               }
               if (_ix == 4) {
-                await context.read<AppState>().setSeenOnboarding();
+                // save goals to app state
+                await app.setGoals(
+                  earnings: _gEarnings.roundToDouble(),
+                  trips: _gTrips.round(),
+                  driveMinutes: _gDrive.round(),
+                  breakMinutes: _gBreak.round(),
+                  breaks: _gBreaks.round(),
+                );
               }
-              if (_ix < 4) {
-                _ctrl.nextPage(duration: const Duration(milliseconds: 250), curve: Curves.easeOut);
+              if (_ix == 5) {
+                // save driver selection
+                final id = _selectedDriverId!;
+                final d = app.drivers[id]!;
+                await app.setDriver(d);
+              }
+              if (last) {
+                // seed mock data if user kept the toggle ON (default)
+                if (_seedMockData) {
+                  await MockSeed.seedIfEmpty(data: app.dataService, customers: app.customers);
+                  await app.reloadLocalCaches(); // reflect immediately
+                }
+                await app.setSeenOnboarding();
+                if (!mounted) return;
+                Navigator.pushReplacementNamed(context, '/home');
+              } else {
+                _ctrl.nextPage(duration: const Duration(milliseconds: 220), curve: Curves.easeOut);
               }
             },
-            child: Text(_ix == 4 ? t.letsGo : 'Next'),
+            child: Text(last ? t.letsGo : t.next),
           ),
         ],
       ),
     );
   }
 
-  Widget _illustrated({required String img, required String title, required String body}) {
+  Widget _introSlide(String title, String body, String img) {
     return Padding(
       padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 16),
           Expanded(child: Center(child: Image.asset(img, fit: BoxFit.contain))),
           const SizedBox(height: 24),
-          Text(title, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800)),
+          Text(title, style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800)),
           const SizedBox(height: 8),
           Text(body, style: const TextStyle(fontSize: 16)),
+          const SizedBox(height: 8),
         ],
       ),
     );
   }
 
-  Widget _permissionsStep(BuildContext context) {
-    final t = AppLocalizations.of(context)!;
+  Widget _permissionsStep(BuildContext context, AppLocalizations t, AppState app) {
+    final showWarn = app.needsAlwaysOnBanner;
+
     return Padding(
       padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 16),
-          Text(t.permTitle, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800)),
+          Text(t.permTitle, style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800)),
           const SizedBox(height: 8),
           Text(t.permBody),
           const SizedBox(height: 16),
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: Icon(_permOk ? Icons.check_circle : Icons.location_on),
-            title: Text(t.permAllow),
-            trailing: FilledButton(
-              onPressed: () => _requestPerms(context),
-              child: Text(t.permAllow),
+
+          // main permission card (rounded, no squish)
+          RoundedCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Icon(_permOk ? Icons.check_circle : Icons.location_on_outlined,
+                      color: _permOk ? Colors.green : null),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(_permOk ? t.permGranted : t.permAllow,
+                            style: Theme.of(context).textTheme.titleMedium),
+                        if (!_permOk) ...[
+                          const SizedBox(height: 4),
+                          Text(t.permAllowSubtitle, style: Theme.of(context).textTheme.bodySmall),
+                        ],
+                      ],
+                    ),
+                  ),
+                ]),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: () => _handlePermissionFlow(context),
+                    child: Text(_permOk ? t.checkAgain : t.permAllow),
+                  ),
+                ),
+              ],
             ),
           ),
+
+          if (showWarn) ...[
+            const SizedBox(height: 12),
+            _alwaysOnCard(context, t),
+          ],
           const Spacer(),
         ],
       ),
     );
   }
 
-  Future<void> _requestPerms(BuildContext context) async {
-    final status = await _perm.requestLocation();
-    if (status.isGranted) {
-      setState(() => _permOk = true);
-      _ctrl.nextPage(duration: const Duration(milliseconds: 250), curve: Curves.easeOut);
-      return;
-    }
-    if (status.isDenied || status.isRestricted || status.isPermanentlyDenied) {
-      showModalBottomSheet(
-        context: context,
-        isScrollControlled: true,
-        builder: (_) => _deniedSheet(context),
-      );
-    }
-  }
-
-  Widget _deniedSheet(BuildContext context) {
-    final t = AppLocalizations.of(context)!;
-    return Padding(
-      padding: const EdgeInsets.all(24),
-      child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(t.permDeniedTitle, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 8),
-        Text(t.permDeniedBody),
-        const SizedBox(height: 12),
-        Row(children: [
-          OutlinedButton(onPressed: () => Navigator.pop(context), child: Text(t.exitApp)),
+  Widget _alwaysOnCard(BuildContext context, AppLocalizations t) {
+    return Container(
+      decoration: BoxDecoration(
+        color: K.warnOrange,
+        borderRadius: const BorderRadius.all(Radius.circular(K.corner)),
+        border: Border.all(color: Colors.orange.withOpacity(0.25)),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          const Icon(Icons.error_outline, color: Colors.orange),
           const SizedBox(width: 12),
-          FilledButton(
-            onPressed: () async {
-              if (Platform.isIOS || !await Permission.location.shouldShowRequestRationale) {
-                await _perm.openAppSettingsScreen();
-              }
-              if (mounted) Navigator.pop(context);
-            },
-            child: Text(t.openSettings),
-          ),
+          Expanded(child: Text(t.permAlwaysBanner)),
         ]),
         const SizedBox(height: 12),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton(
+            onPressed: () => Navigator.pushNamed(context, '/location-help'),
+            child: Text(t.learnHow),
+          ),
+        ),
       ]),
     );
   }
 
-  Widget _allSet(AppLocalizations t) {
+  Widget _goalsStep(BuildContext context) {
+    TextStyle? label = Theme.of(context).textTheme.labelLarge;
+    Widget slider({
+      required String title,
+      required double value,
+      required double min,
+      required double max,
+      int? divisions,
+      required void Function(double) onChanged,
+      String Function(double)? fmt,
+    }) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: label),
+          Slider(
+            value: value,
+            min: min,
+            max: max,
+            divisions: divisions,
+            label: fmt == null ? value.round().toString() : fmt(value),
+            onChanged: onChanged,
+          ),
+        ],
+      );
+    }
+
     return Padding(
       padding: const EdgeInsets.all(24),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        const SizedBox(height: 16),
-        Text(t.allSetTitle, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800)),
+        Text('Personal goals', style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800)),
         const SizedBox(height: 8),
-        Text(t.allSetBody),
+        Text('Adjust your daily targets to your preference.'),
+        const SizedBox(height: 16),
+
+        RoundedCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              slider(
+                title: 'Daily gains (€)',
+                value: _gEarnings,
+                min: 0, max: 200, divisions: 200,
+                onChanged: (v) => setState(() => _gEarnings = v),
+                fmt: (v) => '€${v.round()}',
+              ),
+              slider(
+                title: 'Completed trips',
+                value: _gTrips,
+                min: 0, max: 30, divisions: 30,
+                onChanged: (v) => setState(() => _gTrips = v),
+                fmt: (v) => '${v.round()}',
+              ),
+              slider(
+                title: 'Drive time (min)',
+                value: _gDrive,
+                min: 0, max: 600, divisions: 120,
+                onChanged: (v) => setState(() => _gDrive = v),
+                fmt: (v) => '${v.round()}',
+              ),
+              slider(
+                title: 'Break time (min)',
+                value: _gBreak,
+                min: 0, max: 240, divisions: 80,
+                onChanged: (v) => setState(() => _gBreak = v),
+                fmt: (v) => '${v.round()}',
+              ),
+              slider(
+                title: 'Breaks',
+                value: _gBreaks,
+                min: 0, max: 10, divisions: 10,
+                onChanged: (v) => setState(() => _gBreaks = v),
+                fmt: (v) => '${v.round()}',
+              ),
+            ],
+          ),
+        ),
         const Spacer(),
       ]),
     );
+  }
+
+  Widget _driverPickStep(BuildContext context, AppState app) {
+    final t = AppLocalizations.of(context)!;
+    final items = app.drivers.values.toList();
+
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(t.selectDriver, style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800)),
+        const SizedBox(height: 8),
+        Text(t.selectDriverBody),
+        const SizedBox(height: 16),
+        DropdownButtonFormField<String>(
+          value: _selectedDriverId,
+          isExpanded: true,
+          decoration: const InputDecoration(),
+          items: items.map((d) {
+            return DropdownMenuItem<String>(
+              value: d.id,
+              child: Row(
+                children: [
+                  Expanded(child: Text(d.name, style: const TextStyle(fontSize: 16))),
+                  RatingStars(rating: d.rating),
+                ],
+              ),
+            );
+          }).toList(),
+          onChanged: (v) => setState(() => _selectedDriverId = v),
+        ),
+        const Spacer(),
+      ]),
+    );
+  }
+
+  Widget _allSet(BuildContext context, AppLocalizations t, String img) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Expanded(child: Center(child: Image.asset(img, fit: BoxFit.contain))),
+        const SizedBox(height: 24),
+        Text(t.allSetTitle, style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800)),
+        const SizedBox(height: 16),
+        Text(t.allSetBody),
+        const SizedBox(height: 12),
+
+        // toggle to seed mock/demo data
+        RoundedCard(
+          child: SwitchListTile.adaptive(
+            contentPadding: EdgeInsets.zero,
+            title: Text(t.seedMockTitle),
+            subtitle: Text(t.seedMockSubtitle),
+            value: _seedMockData,
+            onChanged: (v) => setState(() => _seedMockData = v),
+            secondary: const Icon(Icons.auto_awesome),
+          ),
+        ),
+
+        const SizedBox(height: 8),
+      ]),
+    );
+  }
+
+  Future<void> _handlePermissionFlow(BuildContext context) async {
+    final app = context.read<AppState>();
+    final status = await app.requestWhenInUse();
+    await app.refreshPermissions();
+
+    if (status.isGranted) {
+      setState(() => _permOk = true);
+      return;
+    }
+
+    if (status.isDenied || status.isRestricted || status.isPermanentlyDenied) {
+      if (!mounted) return;
+      // explain that "Allow all the time" is in system settings
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        builder: (_) => Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(AppLocalizations.of(context)!.permDeniedTitle,
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Text(AppLocalizations.of(context)!.permDeniedBody),
+            const SizedBox(height: 12),
+            Row(children: [
+              OutlinedButton(onPressed: () => Navigator.pop(context), child: Text(AppLocalizations.of(context)!.exitApp)),
+              const SizedBox(width: 12),
+              FilledButton(
+                onPressed: () async {
+                  await app.openAppSettings(); // opens app settings page
+                  if (mounted) Navigator.pop(context);
+                },
+                child: Text(AppLocalizations.of(context)!.openSettings),
+              ),
+            ]),
+            const SizedBox(height: 12),
+          ]),
+        ),
+      );
+    }
   }
 }
