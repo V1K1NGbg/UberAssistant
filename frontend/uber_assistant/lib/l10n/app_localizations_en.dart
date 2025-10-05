@@ -168,7 +168,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get allSetTitle => 'You’re all set!';
 
   @override
-  String get allSetBody => 'Let’s pick a driver and start receiving offers.';
+  String get allSetBody => 'Let’s get ready and start receiving offers.';
 
   @override
   String get letsGo => 'Let’s go!';
@@ -339,4 +339,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get openDialerError => 'Couldn\'t open dialer.';
+
+  @override
+  String get seedMockTitle => 'Load demo data';
+
+  @override
+  String get seedMockSubtitle =>
+      'Preload realistic history and breaks so you can explore reports right away.';
 }

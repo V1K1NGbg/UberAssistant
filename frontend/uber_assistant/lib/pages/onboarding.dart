@@ -8,6 +8,9 @@ import '../widgets/rating_stars.dart';
 import '../widgets/rounded_card.dart';
 import '../constants.dart';
 import 'package:permission_handler/permission_handler.dart';
+// add seeder
+import '../dev/mock_seed.dart';
+
 class OnboardingPage extends StatefulWidget {
   const OnboardingPage({super.key});
 
@@ -20,6 +23,9 @@ class _OnboardingPageState extends State<OnboardingPage> {
   int _ix = 0;
   bool _permOk = false;
   String? _selectedDriverId;
+
+  // new: toggle to seed mock data (default ON)
+  bool _seedMockData = true;
 
   @override
   void initState() {
@@ -56,7 +62,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                   _introSlide(t.onboardingTitle3, t.onboardingBody3, 'assets/images/onboarding_3.png'),
                   _permissionsStep(context, t, app),
                   _driverPickStep(context, app),
-                  _allSet(t, 'assets/images/onboarding_4.png'),
+                  _allSet(context, t, 'assets/images/onboarding_4.png'),
                 ],
               ),
             ),
@@ -107,6 +113,10 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 await app.setDriver(d);
               }
               if (last) {
+                // seed mock data if user kept the toggle ON (default)
+                if (_seedMockData) {
+                  await MockSeed.seedIfEmpty(data: app.dataService, customers: app.customers);
+                }
                 await app.setSeenOnboarding();
                 if (!mounted) return;
                 Navigator.pushReplacementNamed(context, '/home');
@@ -198,7 +208,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
   }
 
   Widget _alwaysOnCard(BuildContext context, AppLocalizations t) {
-    // RoundedCard with warm background; action inside the card (Material recommends cards for content + actions) :contentReference[oaicite:1]{index=1}
+    // RoundedCard with warm background; action inside the card (Material recommends cards for content + actions)
     return Container(
       decoration: BoxDecoration(
         color: K.warnOrange,
@@ -257,7 +267,8 @@ class _OnboardingPageState extends State<OnboardingPage> {
     );
   }
 
-  Widget _allSet(AppLocalizations t, String img) {
+  Widget _allSet(BuildContext context, AppLocalizations t, String img) {
+    final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.all(24),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -266,6 +277,20 @@ class _OnboardingPageState extends State<OnboardingPage> {
         Text(t.allSetTitle, style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800)),
         const SizedBox(height: 16),
         Text(t.allSetBody),
+        const SizedBox(height: 12),
+
+        // new: toggle to seed mock/demo data
+        RoundedCard(
+          child: SwitchListTile.adaptive(
+            contentPadding: EdgeInsets.zero,
+            title: Text(t.seedMockTitle),
+            subtitle: Text(t.seedMockSubtitle),
+            value: _seedMockData,
+            onChanged: (v) => setState(() => _seedMockData = v),
+            secondary: const Icon(Icons.auto_awesome),
+          ),
+        ),
+
         const SizedBox(height: 8),
       ]),
     );
@@ -283,7 +308,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
 
     if (status.isDenied || status.isRestricted || status.isPermanentlyDenied) {
       if (!mounted) return;
-      // explain that "Allow all the time" is in system settings (per Android docs) :contentReference[oaicite:2]{index=2}
+      // explain that "Allow all the time" is in system settings (per Android docs)
       showModalBottomSheet(
         context: context,
         isScrollControlled: true,

@@ -103,5 +103,7 @@
   "details": "Details",
   "takeABreak": "Neem pauze",
   "motivationTitle": "Goed bezig!",
-  "openDialerError": "Kon de telefoonapp niet openen."
+  "openDialerError": "Kon de telefoonapp niet openen.",
+  "seedMockTitle": "Demogegevens laden",
+  "seedMockSubtitle": "Laad realistische geschiedenis en pauzes vooraf zodat je rapporten meteen kunt verkennen."
 }

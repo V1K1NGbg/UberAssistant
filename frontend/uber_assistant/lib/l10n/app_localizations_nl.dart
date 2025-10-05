@@ -341,4 +341,11 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get openDialerError => 'Kon de telefoonapp niet openen.';
+
+  @override
+  String get seedMockTitle => 'Demogegevens laden';
+
+  @override
+  String get seedMockSubtitle =>
+      'Laad realistische geschiedenis en pauzes vooraf zodat je rapporten meteen kunt verkennen.';
 }

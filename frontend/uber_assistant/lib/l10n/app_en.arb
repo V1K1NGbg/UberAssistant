@@ -48,7 +48,7 @@
   "exitApp": "Exit",
   "openSettings": "Open Settings",
   "allSetTitle": "You’re all set!",
-  "allSetBody": "Let’s pick a driver and start receiving offers.",
+  "allSetBody": "Let’s get ready and start receiving offers.",
   "letsGo": "Let’s go!",
   "next": "Next",
   "back": "Back",
@@ -103,5 +103,7 @@
   "details": "Details",
   "takeABreak": "Take a break",
   "motivationTitle": "Nice work!",
-  "openDialerError": "Couldn't open dialer."
+  "openDialerError": "Couldn't open dialer.",
+  "seedMockTitle": "Load demo data",
+  "seedMockSubtitle": "Preload realistic history and breaks so you can explore reports right away."
 }

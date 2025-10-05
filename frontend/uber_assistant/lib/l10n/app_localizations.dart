@@ -395,7 +395,7 @@ abstract class AppLocalizations {
   /// No description provided for @allSetBody.
   ///
   /// In en, this message translates to:
-  /// **'Let’s pick a driver and start receiving offers.'**
+  /// **'Let’s get ready and start receiving offers.'**
   String get allSetBody;
 
   /// No description provided for @letsGo.
@@ -721,6 +721,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t open dialer.'**
   String get openDialerError;
+
+  /// No description provided for @seedMockTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Load demo data'**
+  String get seedMockTitle;
+
+  /// No description provided for @seedMockSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Preload realistic history and breaks so you can explore reports right away.'**
+  String get seedMockSubtitle;
 }
 
 class _AppLocalizationsDelegate
