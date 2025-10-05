@@ -46,6 +46,7 @@ dependencies:
   latlong2: ^0.9.1
   h3_flutter: ^0.7.0
   csv: ^6.0.0
+  fl_chart: ^0.68.0
 
 dev_dependencies:
   flutter_test:
