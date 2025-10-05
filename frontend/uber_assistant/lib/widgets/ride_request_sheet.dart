@@ -169,7 +169,7 @@ class _RideRequestSheetState extends State<RideRequestSheet> {
         borderRadius: BorderRadius.circular(999),
         border: Border.all(color: color.withOpacity(0.35)),
       ),
-      child: Text(text, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+      // child: Text(text, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
     );
   }
 
