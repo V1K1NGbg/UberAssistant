@@ -1,5 +1,5 @@
 # Uber Assistant
-[JunctionX Delft Hackathon - The Cucumbers](https://eu.junctionplatform.com/projects/junctionx-delft/view/68e22ff2caba096fa9fb405a)
+🥇 First Place @ [JunctionX Delft Hackathon - The Cucumbers](https://eu.junctionplatform.com/projects/junctionx-delft/view/68e22ff2caba096fa9fb405a)
 
 The Uber Assistant that optimizes routes, rewards, and rest, helps drivers earn smarter and drive healthier. By combining data-driven insights with personalized guidance, it transforms driving from reactive to strategic, improving safety, satisfaction, and retention across Uber’s network.
 ## It consists of 3 parts
