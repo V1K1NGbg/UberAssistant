@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:provider/provider.dart';
 import '../l10n/app_localizations.dart';
 import '../providers/app_state.dart';
 import '../widgets/rating_stars.dart';
@@ -75,7 +74,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                   _introSlide(t.onboardingTitle2, t.onboardingBody2, 'assets/images/onboarding_2.png'),
                   _introSlide(t.onboardingTitle3, t.onboardingBody3, 'assets/images/onboarding_3.png'),
                   _permissionsStep(context, t, app),              // 3
-                  _goalsStep(context),                            // 4 (NEW)
+                  _goalsStep(context),                            // 4 (updated)
                   _driverPickStep(context, app),                  // 5
                   _allSet(context, t, 'assets/images/onboarding_4.png'), // 6
                 ],
@@ -258,33 +257,64 @@ class _OnboardingPageState extends State<OnboardingPage> {
     );
   }
 
-  Widget _goalsStep(BuildContext context) {
-    TextStyle? label = Theme.of(context).textTheme.labelLarge;
-    Widget slider({
-      required String title,
-      required double value,
-      required double min,
-      required double max,
-      int? divisions,
-      required void Function(double) onChanged,
-      String Function(double)? fmt,
-    }) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title, style: label),
-          Slider(
-            value: value,
-            min: min,
-            max: max,
-            divisions: divisions,
-            label: fmt == null ? value.round().toString() : fmt(value),
-            onChanged: onChanged,
-          ),
-        ],
-      );
-    }
+  // ---------- GOALS STEP (updated formatting) ----------
+  String _fmtValue({
+    required double value,
+    String? prefix,
+    String? suffix,
+  }) {
+    final iv = value.round();
+    if (prefix != null) return '$prefix$iv';
+    if (suffix != null) return '$iv $suffix';
+    return '$iv';
+  }
 
+  Widget _goalSlider({
+    required BuildContext context,
+    required String title,
+    required double value,
+    required double min,
+    required double max,
+    required int divisions,
+    String? unitPrefix,
+    String? unitSuffix,
+    required ValueChanged<double> onChanged,
+  }) {
+    final labelStyle = Theme.of(context).textTheme.labelLarge;
+    final valueStyle = labelStyle?.copyWith(fontWeight: FontWeight.w600);
+
+    final labelText = _fmtValue(value: value, prefix: unitPrefix, suffix: unitSuffix);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(child: Text(title, style: labelStyle)),
+            Text(
+              labelText,
+              style: valueStyle,
+              textAlign: TextAlign.right,
+              overflow: TextOverflow.fade,
+              softWrap: false,
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Slider(
+          value: value,
+          min: min,
+          max: max,
+          divisions: divisions,
+          // This shows on the value indicator (for discrete sliders) and updates live.
+          label: labelText,
+          onChanged: onChanged,
+        ),
+      ],
+    );
+  }
+
+  Widget _goalsStep(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(24),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -297,40 +327,57 @@ class _OnboardingPageState extends State<OnboardingPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              slider(
-                title: 'Daily gains (€)',
+              _goalSlider(
+                context: context,
+                title: 'Daily gains',
                 value: _gEarnings,
-                min: 0, max: 200, divisions: 200,
+                min: 0,
+                max: 200,
+                divisions: 200,
+                unitPrefix: '€',
                 onChanged: (v) => setState(() => _gEarnings = v),
-                fmt: (v) => '€${v.round()}',
               ),
-              slider(
+              const SizedBox(height: 8),
+              _goalSlider(
+                context: context,
                 title: 'Completed trips',
                 value: _gTrips,
-                min: 0, max: 30, divisions: 30,
+                min: 0,
+                max: 30,
+                divisions: 30,
                 onChanged: (v) => setState(() => _gTrips = v),
-                fmt: (v) => '${v.round()}',
               ),
-              slider(
-                title: 'Drive time (min)',
+              const SizedBox(height: 8),
+              _goalSlider(
+                context: context,
+                title: 'Drive time',
                 value: _gDrive,
-                min: 0, max: 600, divisions: 120,
+                min: 0,
+                max: 600,
+                divisions: 120,
+                unitSuffix: 'min',
                 onChanged: (v) => setState(() => _gDrive = v),
-                fmt: (v) => '${v.round()}',
               ),
-              slider(
-                title: 'Break time (min)',
+              const SizedBox(height: 8),
+              _goalSlider(
+                context: context,
+                title: 'Break time',
                 value: _gBreak,
-                min: 0, max: 240, divisions: 80,
+                min: 0,
+                max: 240,
+                divisions: 80,
+                unitSuffix: 'min',
                 onChanged: (v) => setState(() => _gBreak = v),
-                fmt: (v) => '${v.round()}',
               ),
-              slider(
+              const SizedBox(height: 8),
+              _goalSlider(
+                context: context,
                 title: 'Breaks',
                 value: _gBreaks,
-                min: 0, max: 10, divisions: 10,
+                min: 0,
+                max: 10,
+                divisions: 10,
                 onChanged: (v) => setState(() => _gBreaks = v),
-                fmt: (v) => '${v.round()}',
               ),
             ],
           ),
@@ -339,6 +386,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
       ]),
     );
   }
+  // ---------- end GOALS STEP ----------
 
   Widget _driverPickStep(BuildContext context, AppState app) {
     final t = AppLocalizations.of(context)!;

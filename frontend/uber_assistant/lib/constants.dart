@@ -33,7 +33,7 @@ class K {
   static const keyDriverId = 'driver_id';
   static const keyServerIp = 'server_ip';
   static const keyLanguage = 'language'; // 'system' | 'en' | 'nl'
-  static const String defaultServerIp = '192.168.8.103';
+  static const String defaultServerIp = '145.94.148.108';
 
   // ui
   static const double corner = 16;

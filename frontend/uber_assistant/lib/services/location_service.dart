@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:geolocator/geolocator.dart';
 
 class LocationService {
@@ -27,4 +28,14 @@ class LocationService {
       return null;
     }
   }
+
+  /// NEW: whether platform Location Services (GPS) are ON
+  Future<bool> isServiceEnabled() => Geolocator.isLocationServiceEnabled();
+
+  /// NEW: stream that emits true/false when service status changes
+  Stream<bool> onServiceStatusChanged() =>
+      Geolocator.getServiceStatusStream().map((s) => s == ServiceStatus.enabled);
+
+  /// NEW: open the OS Location Settings screen
+  Future<void> openLocationSettings() => Geolocator.openLocationSettings();
 }
